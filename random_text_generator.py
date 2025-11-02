@@ -3,16 +3,32 @@ import string
 import time
 import requests
 
-def check_word(word, lang='en'):
-    """Checks if a word is a valid English word using the Free Dictionary API."""
+def get_word_definition(word, lang='en'):
+    """
+    Retrieves the definition of a word using the Free Dictionary API.
+    Returns the definition string if found, otherwise None.
+    """
     if len(word) < 2:  # No need to check single letters or empty strings
-        return False
+        return None
     try:
         response = requests.get(f"https://api.dictionaryapi.dev/api/v2/entries/{lang}/{word}")
-        return response.status_code == 200
+        if response.status_code == 200:
+            data = response.json()
+            # Navigate through the JSON to find the first definition
+            if data and isinstance(data, list):
+                meanings = data[0].get('meanings')
+                if meanings and isinstance(meanings, list):
+                    definitions = meanings[0].get('definitions')
+                    if definitions and isinstance(definitions, list):
+                        definition = definitions[0].get('definition')
+                        if definition:
+                            return definition
+            return "No definition found." # Word exists but no definition in expected format
+        else:
+            return None # Word not found
     except requests.exceptions.RequestException as e:
         print(f"An error occurred: {e}")
-        return False
+        return None
 
 def mode_one():
     """Generates and prints an endless stream of random characters."""
@@ -41,16 +57,20 @@ def mode_two(limit, lang='en'):
             if char.isalpha():
                 current_word += char.lower()
             else:
-                if check_word(current_word, lang):
+                definition = get_word_definition(current_word, lang)
+                if definition:
                     found_words_count += 1
-                    f.write(current_word + "\n")
+                    f.write(f"Word: {current_word}\n")
+                    f.write(f"Definition: {definition}\n\n")
                     print(f"\nFound word: {current_word}")
                 current_word = ""
 
     # Check the last word, in case the generation ends with a word
-    if check_word(current_word, lang):
+    definition = get_word_definition(current_word, lang)
+    if definition:
         with open("found_words.txt", "a") as f:
-            f.write(current_word + "\n")
+            f.write(f"Word: {current_word}\n")
+            f.write(f"Definition: {definition}\n\n")
         found_words_count += 1
 
     print(f"\nGenerated text: {generated_text}")
@@ -73,17 +93,21 @@ def mode_three(lang='en'):
                 if char.isalpha():
                     current_word += char.lower()
                 else:
-                    if check_word(current_word, lang):
+                    definition = get_word_definition(current_word, lang)
+                    if definition:
                         found_words_count += 1
-                        f.write(current_word + "\n")
+                        f.write(f"Word: {current_word}\n")
+                        f.write(f"Definition: {definition}\n\n")
                         f.flush()
                         print(f"\nFound word: {current_word} (Total: {found_words_count})")
                     current_word = ""
     except KeyboardInterrupt:
         # Check the last word before exiting
-        if check_word(current_word, lang):
+        definition = get_word_definition(current_word, lang)
+        if definition:
              with open("found_words_live.txt", "a") as f:
-                f.write(current_word + "\n")
+                f.write(f"Word: {current_word}\n")
+                f.write(f"Definition: {definition}\n\n")
                 found_words_count += 1
                 print(f"\nFound one last word before stopping: {current_word}")
 
