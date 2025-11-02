@@ -50,7 +50,7 @@ def mode_two(limit, lang='en'):
     current_word = ""
     generated_text = ""
 
-    with open("found_words.txt", "w") as f:
+    with open("found_words.txt", "w", encoding="utf-8") as f:
         for _ in range(limit):
             char = random.choice(char_set)
             generated_text += char
@@ -68,7 +68,7 @@ def mode_two(limit, lang='en'):
     # Check the last word, in case the generation ends with a word
     definition = get_word_definition(current_word, lang)
     if definition:
-        with open("found_words.txt", "a") as f:
+        with open("found_words.txt", "a", encoding="utf-8") as f:
             f.write(f"Word: {current_word}\n")
             f.write(f"Definition: {definition}\n\n")
         found_words_count += 1
@@ -84,7 +84,7 @@ def mode_three(lang='en'):
     current_word = ""
 
     try:
-        with open("found_words_live.txt", "w") as f:
+        with open("found_words_live.txt", "w", encoding="utf-8") as f:
             while True:
                 char = random.choice(char_set)
                 print(char, end='', flush=True)
@@ -105,7 +105,7 @@ def mode_three(lang='en'):
         # Check the last word before exiting
         definition = get_word_definition(current_word, lang)
         if definition:
-             with open("found_words_live.txt", "a") as f:
+             with open("found_words_live.txt", "a", encoding="utf-8") as f:
                 f.write(f"Word: {current_word}\n")
                 f.write(f"Definition: {definition}\n\n")
                 found_words_count += 1
