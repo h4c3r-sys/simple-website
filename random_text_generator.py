@@ -90,9 +90,38 @@ def mode_three(lang='en'):
 
         print(f"\nMode 3 stopped. Found a total of {found_words_count} words.")
 
+def mode_four():
+    """Generates a cipher puzzle and displays it with the solution."""
+    print("Starting Mode 4: Cipher Puzzle")
+
+    # Create a random mapping from numbers to letters
+    letters = list(string.ascii_lowercase)
+    random.shuffle(letters)
+    # Create a reverse mapping for encoding
+    reverse_cipher = {letter: num for num, letter in zip(range(1, 27), letters)}
+
+    # Hardcoded list of words
+    words = ["python", "jules", "cipher", "random", "developer"]
+    secret_word = random.choice(words)
+
+    # Encode the secret word
+    encoded_word = [str(reverse_cipher[letter]) for letter in secret_word]
+
+    # Display the puzzle and solution
+    print(f"Your puzzle is: {' '.join(encoded_word)}")
+    print("Try to solve it! The solution is below.")
+    print("-" * 20)
+    print("Solution:")
+    print(f"The secret word was: {secret_word}")
+    print("Cipher Key:")
+    # Create the forward cipher for displaying the key
+    cipher = {num: letter for letter, num in reverse_cipher.items()}
+    for number in sorted(cipher.keys()):
+        print(f"{number}: {cipher[number]}")
+
 def main():
     parser = argparse.ArgumentParser(description="Generate and analyze random text.")
-    parser.add_argument("mode", type=int, choices=[1, 2, 3], help="The mode to run.")
+    parser.add_argument("mode", type=int, choices=[1, 2, 3, 4], help="The mode to run.")
     parser.add_argument("-l", "--limit", type=int, help="The number of characters to generate in Mode 2.")
     parser.add_argument("--lang", type=str, default="en", help="The language to check for words in (e.g., en, es, fr).")
     args = parser.parse_args()
@@ -106,6 +135,8 @@ def main():
             print("Mode 2 requires a limit. Use -l or --limit to specify the number of characters.")
     elif args.mode == 3:
         mode_three(args.lang)
+    elif args.mode == 4:
+        mode_four()
 
 if __name__ == "__main__":
     main()
