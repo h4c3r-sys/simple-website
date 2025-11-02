@@ -2,7 +2,6 @@ import random
 import string
 import time
 import requests
-import argparse
 
 def check_word(word, lang='en'):
     """Checks if a word is a valid English word using the Free Dictionary API."""
@@ -120,23 +119,34 @@ def mode_four():
         print(f"{number}: {cipher[number]}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate and analyze random text.")
-    parser.add_argument("mode", type=int, choices=[1, 2, 3, 4], help="The mode to run.")
-    parser.add_argument("-l", "--limit", type=int, help="The number of characters to generate in Mode 2.")
-    parser.add_argument("--lang", type=str, default="en", help="The language to check for words in (e.g., en, es, fr).")
-    args = parser.parse_args()
+    while True:
+        print("\nSelect a mode:")
+        print("1. Generate endless random characters")
+        print("2. Generate a specific number of random characters and find words")
+        print("3. Generate endless random characters and find words in real-time")
+        print("4. Cipher puzzle")
+        print("5. Exit")
 
-    if args.mode == 1:
-        mode_one()
-    elif args.mode == 2:
-        if args.limit:
-            mode_two(args.limit, args.lang)
+        choice = input("Enter your choice (1-5): ")
+
+        if choice == '1':
+            mode_one()
+        elif choice == '2':
+            try:
+                limit = int(input("Enter the number of characters to generate: "))
+                lang = input("Enter the language for word checking (e.g., en, es, fr): ")
+                mode_two(limit, lang)
+            except ValueError:
+                print("Invalid input for the character limit. Please enter a number.")
+        elif choice == '3':
+            lang = input("Enter the language for word checking (e.g., en, es, fr): ")
+            mode_three(lang)
+        elif choice == '4':
+            mode_four()
+        elif choice == '5':
+            break
         else:
-            print("Mode 2 requires a limit. Use -l or --limit to specify the number of characters.")
-    elif args.mode == 3:
-        mode_three(args.lang)
-    elif args.mode == 4:
-        mode_four()
+            print("Invalid choice. Please try again.")
 
 if __name__ == "__main__":
     main()
