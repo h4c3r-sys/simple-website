@@ -1,83 +1,75 @@
+// --- DOM Elements ---
 const questionElement = document.getElementById('question');
 const answerElement = document.getElementById('answer');
 const submitElement = document.getElementById('submit');
-const scoreElement = document.getElementById('score');
-const feedbackElement = document.getElementById('feedback'); // Added for feedback
+const feedbackElement = document.getElementById('feedback');
+const languageSelect = document.getElementById('language-select');
 
-let score = 0;
-let correctAnswersInLevel = 0;
-let level = 1;
-const questionsPerLevel = 5;
+// --- State ---
+let internalScore = 0;
 let currentQuestion = null;
+const MATH_API_URL = 'https://math.oglimmer.de/v1/calc?expression=';
+let TRANSLATE_API_URL = 'https://translate.argosopentech.com/';
 
-function generateQuestion(level) {
-    let q = {};
-    const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-    const formatExpr = (num) => (num < 0 ? `(${num})` : num);
+// --- Internationalization (i18n) ---
+const translations = {
+    en: { title: "Ultra Mega Math Quiz", submit_button: "Submit", correct_feedback: "Correct!", incorrect_feedback: "Incorrect. A similar question will be generated.", placeholder: "Your answer...", },
+    es: { title: "Ultra Mega Concurso de Matemáticas", submit_button: "Enviar", correct_feedback: "¡Correcto!", incorrect_feedback: "Incorrecto. Se generará una pregunta similar.", placeholder: "Tu respuesta...", }
+};
+const defaultLanguages = [ { code: 'en', name: 'English' }, { code: 'es', name: 'Español' }, { code: 'fr', name: 'Français' }, { code: 'de', name: 'Deutsch' }, { code: 'zh', name: '中文' }];
 
-    if (level === 1) { q.text = `\\(${rand(1,10)} + ${rand(1,10)}\\)`; q.answer = [eval(q.text.replace(/\\\(|\\\)/g, ''))]; }
-    else if (level === 2) { q.text = `\\(${rand(10,20)} - ${rand(1,9)}\\)`; q.answer = [eval(q.text.replace(/\\\(|\\\)/g, ''))]; }
-    else if (level === 3) { q.text = `\\(${rand(2,10)} \\times ${rand(2,10)}\\)`; q.answer = [eval(q.text.replace(/\\\(|\\\)|\\times/g, '*'))]; }
-    else if (level === 4) { const b = rand(2, 10); const a = b * rand(2, 10); q.text = `\\(${a} \\div ${b}\\)`; q.answer = [a/b]; }
-    else if (level === 5) { q.text = `\\(${rand(-10,10)} + ${formatExpr(rand(-10,10))}\\)`; q.answer = [eval(q.text.replace(/\\\(|\\\)/g, ''))]; }
-    else if (level === 6) { q.text = `\\(${rand(-10,10)} - ${formatExpr(rand(-10,10))}\\)`; q.answer = [eval(q.text.replace(/\\\(|\\\)/g, ''))]; }
-    else if (level === 7) { q.text = `\\(${rand(-8,8)} \\times ${formatExpr(rand(-8,8))}\\)`; q.answer = [eval(q.text.replace(/\\\(|\\\)|\\times/g, '*'))]; }
-    else if (level === 8) { const a = rand(2, 10); const b = rand(2, 3); q.text = `\\(${a}^${b}\\)`; q.answer = [Math.pow(a, b)]; }
-    else if (level === 9) { const a = rand(2, 10); q.text = `\\(\\sqrt{${a*a}}\\)`; q.answer = [a]; }
-    else if (level === 10) { const [a, b, c] = [rand(1,10), rand(2,5), rand(2,5)]; q.text = `\\(${a} + ${b} \\times ${c}\\)`; q.answer = [a + b * c]; }
-    else if (level === 11) { const a = rand(2,10), x = rand(1,5), b = rand(1,10); q.text = `\\(${a}x + ${b} = ${a*x+b}\\)`; q.answer = [x]; }
-    else if (level === 12) { const a = rand(-5,5) || 1, x = rand(-5,5), b = rand(-10,10); q.text = `\\(${a}x + ${b} = ${a*x+b}\\)`; q.answer = [x]; }
-    else if (level === 13) { const x = rand(3,15); q.text = `If \\(x^2 = ${x*x}\\), what is \\(x\\)?`; q.answer = [x, -x]; }
-    else if (level === 14) { const [a,b] = [3,4]; const c = Math.sqrt(a*a + b*b); q.text = `A right triangle has legs \\(${a}\\) and \\(${b}\\). Find the hypotenuse.`; q.answer = [c];}
-    else if (level === 15) { const r = rand(2,10); q.text = `Area of a circle with radius \\(${r}\\)? (Use \\(\\pi=3.14\\))`; q.answer = [3.14*r*r];}
-    else if (level === 16) { const [a,b,c,d] = [rand(1,5), rand(1,5), rand(1,5), rand(1,5)]; q.text = `\\((${a}x + ${b}) + (${c}x + ${d})\\)`; q.answer = [`${a+c}x + ${b+d}`];}
-    else if (level === 17) { const [a,b] = [rand(2,6), rand(2,6)]; q.text = `\\((${a}x)(${b}x^2)\\)`; q.answer = [`${a*b}x^3`];}
-    else if (level === 18) { const x = rand(2,4); q.text = `Solve for x: \\(2^x = ${Math.pow(2,x)}\\)`; q.answer = [x];}
-    else if (level === 19) { const x = rand(2,4); q.text = `Solve for x: \\(\\log_2(${Math.pow(2,x)}) = x\\)`; q.answer = [x];}
-    else if (level === 20) { q.text = `What is \\(\\sin(90^{\\circ})\\)?`; q.answer = [1];}
-    else if (level === 21) { q.text = `What is \\(\\cos(0^{\\circ})\\)?`; q.answer = [1];}
-    else if (level === 22) { const a = rand(3,8); q.text = `Find the derivative of \\(f(x) = x^${a}\\)`; q.answer = [`${a}x^${a-1}`, `${a}x^(${a-1})`];}
-    else if (level === 23) { const a = rand(2,8); const c = rand(1,10); q.text = `Find the derivative of \\(f(x) = ${a}x + ${c}\\)`; q.answer = [a];}
-    else if (level === 24) { const a = rand(2,10); q.text = `Calculate \\(\\int_{0}^{1} ${a}x \\,dx\\)`; q.answer = [a/2];}
-    else if (level === 25) { q.text = `What is \\(i^2\\)?`; q.answer = [-1];}
-    // ... keep adding levels
-    else { q.text = "You are a true math genius! More levels coming soon."; q.answer = ["next"]; }
+async function getSupportedLanguages() { try { const response = await fetch(TRANSLATE_API_URL + 'languages'); if (!response.ok) throw new Error('API down'); const languages = await response.json(); populateLanguageDropdown(languages); } catch (error) { console.error('Language API error, using fallback:', error); populateLanguageDropdown(defaultLanguages); } }
+function populateLanguageDropdown(languages) { languageSelect.innerHTML = ''; languages.forEach(lang => { const option = document.createElement('option'); option.value = lang.code; option.textContent = lang.name; if (lang.code === 'en') option.selected = true; languageSelect.appendChild(option); }); }
+async function translateText(text, targetLang) { if (targetLang === 'en') return text; const key = Object.keys(translations.en).find(k => translations.en[k] === text); if (key && translations[targetLang] && translations[targetLang][key]) return translations[targetLang][key]; try { const response = await fetch(TRANSLATE_API_URL + 'translate', { method: 'POST', body: JSON.stringify({ q: text, source: 'en', target: targetLang }), headers: { 'Content-Type': 'application/json' }, }); if (!response.ok) throw new Error('Translate API failed'); const data = await response.json(); return data.translatedText; } catch (error) { console.error('Translation error:', error); return text; } }
+async function translateUI(lang) { for (const el of document.querySelectorAll('[data-translate]')) { const key = el.getAttribute('data-translate'); el.textContent = await translateText(translations.en[key], lang); } answerElement.placeholder = await translateText(translations.en.placeholder, lang); }
 
-    // Ensure all answers are strings
-    q.answer = q.answer.map(String);
-    return q;
-}
+// --- Question Generation Engine ---
+const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const questionLibrary = {
+    arithmetic: [
+        { level: 0, template: 'a + b', vars: { a: [1, 10], b: [1, 10] } },
+        { level: 5, template: 'a - b', vars: { a: [10, 30], b: [1, 20] } },
+        { level: 10, template: 'a * b', vars: { a: [2, 12], b: [2, 12] } },
+        { level: 15, template: 'a / b', generator: () => { const b = rand(2, 15); return { a: b * rand(2, 10), b: b }; } },
+        { level: 20, template: 'a + b * c', vars: { a: [1, 15], b: [2, 8], c: [2, 8] } },
+        { level: 25, template: '(a + b) * c', vars: { a: [1, 10], b: [1, 10], c: [2, 6] } },
+        { level: 30, template: 'a / b + c', generator: () => { const b = rand(2, 10); return { a: b * rand(2, 10), b: b, c: rand(1, 20) }; } },
+        { level: 35, template: 'a^2 + b^2', vars: { a: [3, 10], b: [3, 10] } },
+    ],
+    algebra: [
+        { level: 40, template: 'a*x + b = c', solveFor: 'x', generator: () => { const a = rand(2, 10); const x = rand(1, 8); const b = rand(-10, 10); return { a, x, b, c: a * x + b }; } },
+        { level: 45, template: 'a*(x+b) = c', solveFor: 'x', generator: () => { const a = rand(2, 8); const x = rand(1, 6); const b = rand(-5, 5); return {a, x, b, c: a*(x+b)}; }},
+        { level: 50, template: '(x+a)(x+b) = 0', solveFor: 'x', isMultiAnswer: true, generator: () => { const a = rand(-8, 8); let b = rand(-8, 8); while (a === b) { b = rand(-8, 8); } return { a, b, x: [-a, -b] }; } },
+        { level: 55, template: 'sqrt(x) = a', solveFor: 'x', generator: () => { const a = rand(3,12); return { a, x: a*a }; }},
+        { level: 60, template: 'log_a(b)', generator: () => { const a = 2; const b = Math.pow(a, rand(2,5)); return {a, b, answer: Math.log(b)/Math.log(a) }; }},
+    ],
+    geometry: [
+        { level: 65, template: 'Area of square with side a', vars: { a: [5, 20] }, answerExpr: 'a*a' },
+        { level: 70, template: 'Area of rectangle with sides a and b', vars: { a: [5, 20], b: [5, 20] }, answerExpr: 'a*b' },
+        { level: 75, template: 'Area of circle with radius r (pi=3.14)', vars: { r: [3, 15] }, answerExpr: '3.14*r*r' },
+    ],
+    trigonometry: [
+        { level: 80, template: 'sin(a)', isFixed: true, generator: () => { const angles = {0:0, 30:0.5, 90:1}; const a = Object.keys(angles)[rand(0,2)]; return { text: `sin(${a} degrees)`, answer: angles[a] }; }},
+        { level: 85, template: 'cos(a)', isFixed: true, generator: () => { const angles = {0:1, 60:0.5, 90:0}; const a = Object.keys(angles)[rand(0,2)]; return { text: `cos(${a} degrees)`, answer: angles[a] }; }},
+    ],
+    calculus: [
+        { level: 90, template: 'd/dx (x^n)', solveFor: 'f\'(x)', generator: () => { const n = rand(2, 8); return { text: `d/dx (x^${n})`, answer: `${n}*x^${n-1}` }; }},
+        { level: 95, template: 'd/dx (a*x^n)', solveFor: 'f\'(x)', generator: () => { const a = rand(2,10); const n = rand(2, 5); return { text: `d/dx (${a}x^${n})`, answer: `${a*n}*x^${n-1}` }; }},
+        { level: 100, template: 'integral(a*x^n, dx)', solveFor: 'F(x)', generator: () => { const a = rand(2,10); const n = rand(2,5); return { text: `integral(${a}x^${n} dx)`, answer: `${a/(n+1)}*x^${n+1}+C` }; }},
+    ],
+};
 
-function displayQuestion() {
-    currentQuestion = generateQuestion(level);
-    questionElement.innerHTML = currentQuestion.text;
-    if (window.MathJax) {
-        MathJax.typesetPromise([questionElement]).catch(err => console.log('MathJax error: ' + err.message));
-    }
-    scoreElement.textContent = `Score: ${score} | Level: ${level}`;
-    feedbackElement.textContent = ''; // Clear feedback
-}
+function generateQuestion() { const available = []; for (const cat in questionLibrary) { for (const q of questionLibrary[cat]) { if (internalScore >= q.level) { available.push(q); } } } const template = available[rand(0, available.length - 1)]; if (template.isFixed) { const qData = template.generator(); return { text: `\\(${qData.text}\\)`, answerExpression: qData.answer }; } let vars = template.generator ? template.generator() : {}; if (!template.generator) { for (const v in template.vars) { vars[v] = rand(template.vars[v][0], template.vars[v][1]); } } let questionText = template.template; let answerExpression = template.answerExpr || template.template; for (const v in vars) { questionText = questionText.replace(new RegExp(v, 'g'), vars[v]); answerExpression = answerExpression.replace(new RegExp(v, 'g'), vars[v]); } if (template.solveFor) { if (template.isMultiAnswer) { return { text: `Solve for ${template.solveFor}: \\(${questionText.replace('*', '\\times')}\\)`, answerExpression: vars[template.solveFor] }; } return { text: `Solve for ${template.solveFor}: \\(${questionText.replace('*', '\\times')}\\)`, answerExpression: vars[template.solveFor] }; } return { text: `\\(${questionText.replace('*', '\\times')}\\)`, answerExpression: answerExpression }; }
 
-function checkAnswer() {
-    const userAnswer = answerElement.value.trim().toLowerCase();
-    if (currentQuestion.answer.includes(userAnswer)) {
-        score++;
-        correctAnswersInLevel++;
-        if (correctAnswersInLevel >= questionsPerLevel) {
-            level++;
-            correctAnswersInLevel = 0;
-        }
-        answerElement.value = '';
-        displayQuestion();
-    } else {
-        feedbackElement.textContent = "Incorrect. Please try again.";
-        feedbackElement.style.color = 'red';
-    }
-}
+async function displayQuestion() { currentQuestion = generateQuestion(); questionElement.innerHTML = currentQuestion.text; if (window.MathJax) { MathJax.typesetPromise([questionElement]); } feedbackElement.textContent = ''; }
+async function checkAnswer() { const userAnswer = answerElement.value.trim().toLowerCase().replace(/\s/g, ''); const lang = languageSelect.value; const correctAnswer = await getCorrectAnswer(currentQuestion.answerExpression); if (Array.isArray(correctAnswer)) { if (correctAnswer.map(String).includes(userAnswer)) { handleCorrectAnswer(lang); } else { handleIncorrectAnswer(lang); } } else { if (userAnswer == correctAnswer) { handleCorrectAnswer(lang); } else { handleIncorrectAnswer(lang); } } }
+async function getCorrectAnswer(expression) { if (typeof expression === 'number' || Array.isArray(expression)) return expression; if (typeof expression === 'string' && !/[\+\-\*\/]/.test(expression)) return expression; try { const response = await fetch(MATH_API_URL + encodeURIComponent(expression)); const data = await response.json(); return data.result; } catch (error) { console.error("Math API Error:", error); return "Error"; } }
+async function handleCorrectAnswer(lang) { internalScore++; feedbackElement.textContent = await translateText(translations.en.correct_feedback, lang); feedbackElement.style.color = 'green'; answerElement.value = ''; setTimeout(displayQuestion, 1000); }
+async function handleIncorrectAnswer(lang) { feedbackElement.textContent = await translateText(translations.en.incorrect_feedback, lang); feedbackElement.style.color = 'red'; answerElement.value = ''; setTimeout(displayQuestion, 2000); }
 
 submitElement.addEventListener('click', checkAnswer);
-answerElement.addEventListener('keyup', function(event) {
-    if (event.key === 'Enter') checkAnswer();
-});
+answerElement.addEventListener('keyup', (e) => { if (e.key === 'Enter') checkAnswer(); });
+languageSelect.addEventListener('change', (e) => translateUI(e.target.value));
 
+getSupportedLanguages();
 displayQuestion();

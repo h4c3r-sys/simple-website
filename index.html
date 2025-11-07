@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultra Mega Math Quiz</title>
+    <title data-translate="title">Ultra Mega Math Quiz</title>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
@@ -24,40 +24,57 @@
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             text-align: center;
-            width: 50%;
+            width: 60%;
+            max-width: 800px;
+        }
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        #language-select {
+            padding: 0.3rem;
         }
         #question {
             font-size: 2rem;
             margin-bottom: 1rem;
-            min-height: 50px;
+            min-height: 60px;
         }
         #answer {
             padding: 0.5rem;
             font-size: 1rem;
+            width: 60%;
         }
         #submit {
             padding: 0.5rem 1rem;
             font-size: 1rem;
             cursor: pointer;
         }
-        #score {
-            margin-top: 1rem;
-            font-size: 1.2rem;
-        }
         #feedback {
             margin-top: 1rem;
-            font-size: 1rem;
-            min-height: 20px;
+            font-size: 1.1rem;
+            min-height: 25px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="quiz-container">
-        <h1>Ultra Mega Math Quiz</h1>
+        <div class="header-controls">
+            <h1 data-translate="title">Ultra Mega Math Quiz</h1>
+            <select id="language-select">
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+                <option value="zh">中文</option>
+                <!-- More languages will be added dynamically -->
+            </select>
+        </div>
         <div id="question"></div>
         <input type="text" id="answer" placeholder="Your answer...">
-        <button id="submit">Submit</button>
-        <div id="score">Score: 0 | Level: 1</div>
+        <button id="submit" data-translate="submit_button">Submit</button>
         <div id="feedback"></div>
     </div>
     <script src="quiz.js"></script>
