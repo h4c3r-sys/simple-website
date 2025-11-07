@@ -7,70 +7,31 @@
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .quiz-container {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            text-align: center;
-            width: 60%;
-            max-width: 800px;
-        }
-        .header-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        #language-select {
-            padding: 0.3rem;
-        }
-        #question {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            min-height: 60px;
-        }
-        #answer {
-            padding: 0.5rem;
-            font-size: 1rem;
-            width: 60%;
-        }
-        #submit {
-            padding: 0.5rem 1rem;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-        #feedback {
-            margin-top: 1rem;
-            font-size: 1.1rem;
-            min-height: 25px;
-            font-weight: bold;
-        }
+        body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 2rem; background-color: #f4f4f4; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .quiz-container { background-color: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; width: 80%; max-width: 900px; }
+        .header-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .game-modes { text-align: left; margin-bottom: 1rem; }
+        .game-modes label { margin-right: 1rem; font-size: 0.9rem; }
+        #image-container { min-height: 200px; margin-bottom: 1rem; display: flex; justify-content: center; align-items: center; border: 1px solid #ddd; border-radius: 4px; background-color: #fafafa; }
+        #image-container img { max-width: 100%; max-height: 200px; }
+        #question { font-size: 2.2rem; margin-bottom: 1rem; min-height: 70px; }
+        #answer { padding: 0.7rem; font-size: 1.1rem; width: 60%; }
+        #submit { padding: 0.7rem 1.2rem; font-size: 1.1rem; cursor: pointer; }
+        #feedback { margin-top: 1rem; font-size: 1.2rem; min-height: 30px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="quiz-container">
         <div class="header-controls">
             <h1 data-translate="title">Ultra Mega Math Quiz</h1>
-            <select id="language-select">
-                <option value="en">English</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
-                <option value="de">Deutsch</option>
-                <option value="zh">中文</option>
-                <!-- More languages will be added dynamically -->
-            </select>
+            <select id="language-select"></select>
+        </div>
+        <div class="game-modes">
+            <label><input type="checkbox" id="hardcore-mode"> <span data-translate="hardcore_mode_label">Hardcore Mode</span></label>
+            <label><input type="checkbox" id="brutal-mode"> <span data-translate="brutal_mode_label">Brutal Mode</span></label>
+        </div>
+        <div id="image-container">
+            <span data-translate="image_placeholder">Image will appear here for relevant questions.</span>
         </div>
         <div id="question"></div>
         <input type="text" id="answer" placeholder="Your answer...">
