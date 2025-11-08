@@ -3,86 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Simple Website</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        
-        header {
-            background-color: #333;
-            color: white;
-            text-align: center;
-            padding: 2rem;
-        }
-
-        nav {
-            background-color: #444;
-            padding: 1rem;
-            text-align: center;
-        }
-
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin: 0 1rem;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        .content-section {
-            background-color: white;
-            padding: 2rem;
-            margin: 1rem 0;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        footer {
-            background-color: #333;
-            color: white;
-            text-align: center;
-            padding: 1rem;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-        }
-    </style>
+    <title>Spam Racer</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <h1>Welcome to My Website</h1>
-        <p>A simple and clean design</p>
-    </header>
-
-    <nav>
-        <a href="#home">Home</a>
-        <a href="#about">About</a>
-        <a href="#contact">Contact</a>
-    </nav>
-
-    <div class="container">
-        <div class="content-section">
-            <h2>About Us</h2>
-            <p>Welcome to our website! This is a simple and clean design that you can customize according to your needs.</p>
+    <div id="setup-screen">
+        <h1 id="p1-prompt">Player 1: Press Your Key</h1>
+        <h1 id="p2-prompt">Player 2: (Waiting...)</h1>
+        <div id="difficulty-selection">
+            <button class="difficulty-btn active" id="easy-btn">EASY</button>
+            <button class="difficulty-btn" id="medium-btn">MEDIUM</button>
+            <button class="difficulty-btn" id="hard-btn">HARD</button>
         </div>
+        <p id="start-prompt" class="hidden">Press ENTER to Start</p>
+    </div>
 
-        <div class="content-section">
-            <h2>Our Services</h2>
-            <p>We provide various services that cater to your needs. Feel free to explore and learn more about what we offer.</p>
+    <div id="game-screen" class="hidden">
+        <div id="message-area"></div>
+        <div class="track-container">
+            <div id="p1-track" class="track"></div>
+        </div>
+        <div class="track-container">
+            <div id="p2-track" class="track"></div>
         </div>
     </div>
 
-    <footer>
-        <p>&copy; 2025 My Simple Website. All rights reserved.</p>
-    </footer>
+    <div id="end-screen" class="hidden">
+        <h1 id="end-message"></h1>
+        <button id="play-again-btn">Play Again</button>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
