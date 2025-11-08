@@ -1,0 +1,146 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(to right, #ece9e6, #ffffff);
+    margin: 0;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+#game-container {
+    width: 100%;
+    max-width: 500px;
+    padding: 30px;
+    background-color: white;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    text-align: center;
+}
+
+header {
+    margin-bottom: 25px;
+}
+
+h1 {
+    color: #333;
+}
+
+#karma-container {
+    font-size: 1.3em;
+    margin-bottom: 12px;
+    color: #555;
+}
+
+#karma-bar-container {
+    width: 100%;
+    height: 25px;
+    background-color: #f2f2f2;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    border: 1px solid #ddd;
+}
+
+#karma-bar {
+    height: 100%;
+    width: 50%; /* Starts at 0 karma */
+    background-color: #28a745; /* Green for good */
+    transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.5s;
+}
+
+#day-counter {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #777;
+}
+
+#scenario-emoji {
+    font-size: 4em;
+    margin-bottom: 15px;
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+#scenario-text {
+    font-size: 1.1em;
+    color: #444;
+    line-height: 1.6;
+}
+
+.choice-btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    font-size: 1em;
+    font-family: 'Poppins', sans-serif;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    color: #333;
+    border: 1px solid #ddd;
+    transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.choice-btn:hover {
+    background-color: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.choice-btn:active {
+    transform: translateY(0);
+}
+
+.hidden {
+    display: none;
+}
+
+#ending-container {
+    margin-top: 25px;
+    animation: fadeIn 0.5s;
+}
+
+#ending-title {
+    color: #333;
+}
+
+#ending-text {
+    color: #555;
+    line-height: 1.6;
+}
+
+#play-again-btn {
+    padding: 12px 25px;
+    font-size: 1.1em;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background-color: #007bff;
+    color: white;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+#play-again-btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+    #game-container {
+        padding: 20px;
+    }
+    h1 {
+        font-size: 1.8em;
+    }
+}

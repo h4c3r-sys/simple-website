@@ -1,0 +1,282 @@
+[
+    {
+        "emoji": "🛒",
+        "dilemma": "You're at the supermarket and see someone accidentally drop a $20 bill. They haven't noticed.",
+        "choices": [
+            {
+                "text": "Pick it up and return it to them.",
+                "karma": 15
+            },
+            {
+                "text": "Quietly pick it up and keep it.",
+                "karma": -20
+            }
+        ]
+    },
+    {
+        "emoji": "🐶",
+        "dilemma": "You see a lost dog with a collar and phone number. You're already running late for an important meeting.",
+        "choices": [
+            {
+                "text": "Take the time to call the owner and wait for them.",
+                "karma": 20
+            },
+            {
+                "text": "Ignore it and continue to your meeting.",
+                "karma": -15
+            }
+        ]
+    },
+    {
+        "emoji": "💬",
+        "dilemma": "A friend tells you a secret about another friend. The other friend later asks if you know anything about it.",
+        "choices": [
+            {
+                "text": "Keep the secret to protect your friend's trust.",
+                "karma": 10
+            },
+            {
+                "text": "Tell the truth, as you believe honesty is most important.",
+                "karma": -10
+            }
+        ]
+    },
+    {
+        "emoji": "☕",
+        "dilemma": "The barista at a coffee shop gives you too much change. It's a busy morning and they likely won't notice.",
+        "choices": [
+            {
+                "text": "Point out the mistake and return the extra money.",
+                "karma": 15
+            },
+            {
+                "text": "Consider it a lucky day and pocket the extra cash.",
+                "karma": -15
+            }
+        ]
+    },
+    {
+        "emoji": "🚗",
+        "dilemma": "You're in a hurry and find a great parking spot, but it's reserved for people with disabilities. You'll only be a few minutes.",
+        "choices": [
+            {
+                "text": "Use the spot, justifying it's just for a short time.",
+                "karma": -25
+            },
+            {
+                "text": "Find another spot, even if it makes you late.",
+                "karma": 10
+            }
+        ]
+    },
+    {
+        "emoji": "📦",
+        "dilemma": "A package for your neighbor is mistakenly delivered to your door. You can see it's from a brand you love.",
+        "choices": [
+            {
+                "text": "Keep the package for yourself.",
+                "karma": -30
+            },
+            {
+                "text": "Take the package to your neighbor's door.",
+                "karma": 15
+            }
+        ]
+    },
+    {
+        "emoji": " gossip",
+        "dilemma": "Your coworkers are gossiping about a new colleague. You don't know the person well, but the stories are juicy.",
+        "choices": [
+            {
+                "text": "Join in and share a laugh with your coworkers.",
+                "karma": -10
+            },
+            {
+                "text": "Change the subject or walk away.",
+                "karma": 10
+            }
+        ]
+    },
+    {
+        "emoji": "📝",
+        "dilemma": "You're taking an online exam and realize you can easily look up the answers without anyone knowing.",
+        "choices": [
+            {
+                "text": "Use the internet to ensure you get a perfect score.",
+                "karma": -20
+            },
+            {
+                "text": "Rely on your own knowledge, even if it means a lower grade.",
+                "karma": 15
+            }
+        ]
+    },
+    {
+        "emoji": "🤝",
+        "dilemma": "You see a homeless person asking for money. You have some spare cash, but you're unsure how they'll spend it.",
+        "choices": [
+            {
+                "text": "Give them the money, trusting them to use it wisely.",
+                "karma": 10
+            },
+            {
+                "text": "Walk by without giving them anything.",
+                "karma": -5
+            }
+        ]
+    },
+    {
+        "emoji": "🗑️",
+        "dilemma": "You're walking in a park and see someone litter. There's a trash can nearby.",
+        "choices": [
+            {
+                "text": "Politely ask them to pick it up.",
+                "karma": 5
+            },
+            {
+                "text": "Ignore it to avoid a confrontation.",
+                "karma": -5
+            }
+        ]
+    },
+    {
+        "emoji": "🎵",
+        "dilemma": "You've downloaded a new album for free from an illegal website. Your friend asks where you got it.",
+        "choices": [
+            {
+                "text": "Share the link with your friend.",
+                "karma": -10
+            },
+            {
+                "text": "Explain that you think it's better to support the artist.",
+                "karma": 10
+            }
+        ]
+    },
+    {
+        "emoji": "🍽️",
+        "dilemma": "You're at a restaurant and the waiter forgets to add a drink to your bill.",
+        "choices": [
+            {
+                "text": "Bring it to their attention.",
+                "karma": 15
+            },
+            {
+                "text": "Say nothing and pay the lower amount.",
+                "karma": -10
+            }
+        ]
+    },
+    {
+        "emoji": "💻",
+        "dilemma": "You have the opportunity to read a friend's private messages without them knowing.",
+        "choices": [
+            {
+                "text": "Respect their privacy and don't look.",
+                "karma": 20
+            },
+            {
+                "text": "Take a peek. What they don't know won't hurt them.",
+                "karma": -25
+            }
+        ]
+    },
+    {
+        "emoji": "🗣️",
+        "dilemma": "You hear someone make a racist joke. Others are laughing, but you find it offensive.",
+        "choices": [
+            {
+                "text": "Speak up and say that you don't find it funny.",
+                "karma": 15
+            },
+            {
+                "text": "Stay silent to avoid making the situation awkward.",
+                "karma": -10
+            }
+        ]
+    },
+    {
+        "emoji": "🤥",
+        "dilemma": "You made a mistake at work that will cost the company a small amount of money. You could easily blame it on a coworker who is already disliked.",
+        "choices": [
+            {
+                "text": "Blame the coworker to save yourself.",
+                "karma": -30
+            },
+            {
+                "text": "Own up to your mistake and face the consequences.",
+                "karma": 20
+            }
+        ]
+    },
+    {
+        "emoji": "📷",
+        "dilemma": "You see a tourist struggling to take a photo of their family. You're in a rush.",
+        "choices": [
+            {
+                "text": "Stop and offer to take the photo for them.",
+                "karma": 10
+            },
+            {
+                "text": "Pretend you didn't notice and hurry on.",
+                "karma": -5
+            }
+        ]
+    },
+    {
+        "emoji": "📚",
+        "dilemma": "You borrow a book from the library and accidentally spill coffee on it, ruining a few pages.",
+        "choices": [
+            {
+                "text": "Return it and hope the librarian doesn't notice.",
+                "karma": -15
+            },
+            {
+                "text": "Explain what happened and offer to pay for the damage.",
+                "karma": 10
+            }
+        ]
+    },
+    {
+        "emoji": "🎸",
+        "dilemma": "Your neighbor's band is practicing loudly while you're trying to study for a big exam.",
+        "choices": [
+            {
+                "text": "Politely ask them if they could keep it down for a little while.",
+                "karma": 5
+            },
+            {
+                "text": "Put on noise-canceling headphones and try to ignore it.",
+                "karma": -5
+            }
+        ]
+    },
+    {
+        "emoji": "🤫",
+        "dilemma": "You know your friend's partner is cheating on them. Your friend is blissfully happy and you don't want to be the one to ruin it.",
+        "choices": [
+            {
+                "text": "Tell your friend the truth, no matter how much it hurts.",
+                "karma": 10
+            },
+            {
+                "text": "Keep quiet to protect your friend's happiness.",
+                "karma": -15
+            }
+        ]
+    },
+    {
+        "emoji": "💡",
+        "dilemma": "You have a brilliant idea in a team meeting, but a shy coworker says it quietly and no one hears. The boss then asks for ideas.",
+        "choices": [
+            {
+                "text": "Present the idea as your own.",
+                "karma": -20
+            },
+            {
+                "text": "Give credit to your coworker and amplify their idea.",
+                "karma": 20
+            }
+        ]
+    }
+]
