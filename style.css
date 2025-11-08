@@ -1,7 +1,42 @@
+@keyframes rainbow-glow {
+    0% {
+        color: #ff0000;
+        text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000;
+    }
+    14% {
+        color: #ff7f00;
+        text-shadow: 0 0 10px #ff7f00, 0 0 20px #ff7f00, 0 0 30px #ff7f00;
+    }
+    28% {
+        color: #ffff00;
+        text-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00, 0 0 30px #ffff00;
+    }
+    42% {
+        color: #00ff00;
+        text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 30px #00ff00;
+    }
+    57% {
+        color: #0000ff;
+        text-shadow: 0 0 10px #0000ff, 0 0 20px #0000ff, 0 0 30px #0000ff;
+    }
+    71% {
+        color: #4b0082;
+        text-shadow: 0 0 10px #4b0082, 0 0 20px #4b0082, 0 0 30px #4b0082;
+    }
+    85% {
+        color: #8f00ff;
+        text-shadow: 0 0 10px #8f00ff, 0 0 20px #8f00ff, 0 0 30px #8f00ff;
+    }
+    100% {
+        color: #ff0000;
+        text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000;
+    }
+}
+
 body {
     font-family: 'Courier New', Courier, monospace;
-    background-color: #1a1a1a;
-    color: #00ff00;
+    background-color: #000;
+    color: #fff;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -16,20 +51,38 @@ body {
 
 #setup-screen, #end-screen {
     text-align: center;
+    background: #111;
+    padding: 2em;
+    border-radius: 15px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 15px #fff, 0 0 25px #fff, 0 0 35px #0ff;
 }
 
-#difficulty-selection button {
-    background-color: #333;
-    color: #00ff00;
-    border: 1px solid #00ff00;
+h1, h3 {
+    animation: rainbow-glow 5s infinite linear;
+    text-transform: uppercase;
+}
+
+#difficulty-selection button, #play-again-btn {
+    background-color: transparent;
+    border: 2px solid;
     padding: 10px 20px;
     margin: 5px;
     cursor: pointer;
+    animation: rainbow-glow 5s infinite linear;
+    transition: all 0.3s ease;
 }
 
+#difficulty-selection button:hover, #play-again-btn:hover {
+    box-shadow: 0 0 15px #fff;
+}
+
+
 #difficulty-selection button.active {
-    background-color: #00ff00;
-    color: #1a1a1a;
+    background-color: #0ff;
+    color: #000;
+    animation: none;
+    box-shadow: 0 0 15px #0ff, 0 0 25px #0ff;
 }
 
 #game-screen {
@@ -42,45 +95,52 @@ body {
 }
 
 #message-area {
-    font-size: 4em;
+    font-size: 5em;
+    font-weight: bold;
     margin-bottom: 20px;
     height: 1.5em;
+    animation: rainbow-glow 2s infinite linear;
 }
 
 .track-container {
-    width: 80%;
+    width: 90%;
     overflow: hidden;
-    border: 2px solid #00ff00;
+    border: 3px solid;
     margin: 10px 0;
     padding: 10px;
+    border-image: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff) 1;
+    box-shadow: 0 0 20px #ff00ff;
 }
 
 .track {
     display: flex;
     position: relative;
-    transition: transform 0.1s linear;
 }
 
 .cell {
-    min-width: 50px;
-    height: 50px;
-    border: 1px solid #333;
+    min-width: 60px;
+    height: 60px;
+    border: 1px solid #555;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 1.2em;
     position: relative;
+    color: #fff;
+    text-shadow: 0 0 5px #fff;
 }
 
 .zero-cell {
     background-color: #330033;
+    color: #ff00ff;
+    font-weight: bold;
+    font-size: 1.5em;
 }
 
 #p1-avatar, #p2-avatar {
-    width: 40px;
-    height: 40px;
-    background-color: #ff00ff;
-    color: #1a1a1a;
+    width: 50px;
+    height: 50px;
+    color: #000;
     border-radius: 50%;
     display: flex;
     justify-content: center;
@@ -88,14 +148,28 @@ body {
     font-weight: bold;
     position: absolute;
     z-index: 10;
+    animation: rainbow-glow-bg 2s infinite linear;
+    border: 2px solid #fff;
+    box-shadow: 0 0 10px #fff;
 }
 
-#play-again-btn {
-    background-color: #00ff00;
-    color: #1a1a1a;
-    border: none;
-    padding: 15px 30px;
-    font-size: 1.2em;
-    cursor: pointer;
-    margin-top: 20px;
+@keyframes rainbow-glow-bg {
+    0% { background-color: #ff0000; }
+    14% { background-color: #ff7f00; }
+    28% { background-color: #ffff00; }
+    42% { background-color: #00ff00; }
+    57% { background-color: #0000ff; }
+    71% { background-color: #4b0082; }
+    85% { background-color: #8f00ff; }
+    100% { background-color: #ff0000; }
+}
+
+#music-selection {
+    margin: 20px 0;
+    color: #0ff;
+    text-shadow: 0 0 8px #0ff;
+}
+
+#music-selection label {
+    margin: 0 10px;
 }

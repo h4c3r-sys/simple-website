@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const endMessage = document.getElementById('end-message');
     const playAgainBtn = document.getElementById('play-again-btn');
     const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+    const gameMusic = document.getElementById('game-music');
+    const musicSelection = document.getElementById('music-selection');
 
     // Game State
     let player1_key = null;
@@ -22,6 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let player2_penaltyTimer = null;
     let penaltyTime = 2000; // Default Easy
     let gameState = "setup";
+    let p1KeyDown = false;
+    let p2KeyDown = false;
+
 
     // --- Helper Functions ---
     function isValidKey(key) {
@@ -49,6 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Game Flow ---
 
     function resetGame() {
+        gameMusic.pause();
+        gameMusic.currentTime = 0;
         // Reset variables
         player1_key = null;
         player2_key = null;
@@ -60,6 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
         player2_penaltyTimer = null;
         penaltyTime = 2000;
         gameState = "setup";
+        p1KeyDown = false;
+        p2KeyDown = false;
+
 
         // Reset UI
         setupScreen.classList.remove('hidden');
@@ -78,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Re-attach setup listener
         document.addEventListener('keydown', setupKeyListener);
         document.removeEventListener('keydown', raceKeyListener);
+        document.removeEventListener('keyup', raceKeyUpListener);
     }
 
     function checkSecretEnding() {
@@ -101,6 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startCountdown() {
+        const selectedMusic = musicSelection.querySelector('input[name="music"]:checked').value;
+        gameMusic.src = selectedMusic;
+
         setupScreen.classList.add('hidden');
         gameScreen.classList.remove('hidden');
         generateTracks();
@@ -120,10 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             messageArea.textContent = 'GO!';
             speak('Go!');
+            try {
+                gameMusic.play();
+            } catch (error) {
+                console.log("Music could not be played.", error);
+            }
             placePlayers();
             gameState = "racing";
             document.removeEventListener('keydown', setupKeyListener);
             document.addEventListener('keydown', raceKeyListener);
+            document.addEventListener('keyup', raceKeyUpListener);
             startPenaltyTimer(1);
             startPenaltyTimer(2);
         }, 3000);
@@ -229,9 +249,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showWinScreen(winnerPlayerNumber) {
         gameState = "finished";
+        gameMusic.pause();
+        gameMusic.currentTime = 0;
         clearTimeout(player1_penaltyTimer);
         clearTimeout(player2_penaltyTimer);
         document.removeEventListener('keydown', raceKeyListener);
+        document.removeEventListener('keyup', raceKeyUpListener);
 
         const winnerKey = winnerPlayerNumber === 1 ? player1_key : player2_key;
         const title = generateRandomTitle();
@@ -245,9 +268,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showShameScreen(loserPlayerNumber) {
         gameState = "finished";
+        gameMusic.pause();
+        gameMusic.currentTime = 0;
         clearTimeout(player1_penaltyTimer);
         clearTimeout(player2_penaltyTimer);
         document.removeEventListener('keydown', raceKeyListener);
+        document.removeEventListener('keyup', raceKeyUpListener);
 
         const loserKey = loserPlayerNumber === 1 ? player1_key : player2_key;
         const msg = `Shame, ${loserKey}! You reached the anti-finish line.`;
@@ -287,20 +313,32 @@ document.addEventListener('DOMContentLoaded', () => {
         if (gameState !== "racing") return;
         const key = e.key.toUpperCase();
 
-        if (key === player1_key) {
+        if (key === player1_key && !p1KeyDown) {
+            p1KeyDown = true;
             player1_position++;
             movePlayer(1);
             startPenaltyTimer(1);
             if (player1_position === 30) {
                 showWinScreen(1);
             }
-        } else if (key === player2_key) {
+        } else if (key === player2_key && !p2KeyDown) {
+            p2KeyDown = true;
             player2_position++;
             movePlayer(2);
             startPenaltyTimer(2);
             if (player2_position === 30) {
                 showWinScreen(2);
             }
+        }
+    };
+
+    const raceKeyUpListener = (e) => {
+        if (gameState !== "racing") return;
+        const key = e.key.toUpperCase();
+        if (key === player1_key) {
+            p1KeyDown = false;
+        } else if (key === player2_key) {
+            p2KeyDown = false;
         }
     };
 

@@ -15,6 +15,18 @@
             <button class="difficulty-btn" id="medium-btn">MEDIUM</button>
             <button class="difficulty-btn" id="hard-btn">HARD</button>
         </div>
+        <div id="music-selection">
+            <h3>Choose Your Music:</h3>
+            <label>
+                <input type="radio" name="music" value="song1.mp3" checked> Song 1
+            </label>
+            <label>
+                <input type="radio" name="music" value="song2.mp3"> Song 2
+            </label>
+            <label>
+                <input type="radio" name="music" value="song3.mp3"> Song 3
+            </label>
+        </div>
         <p id="start-prompt" class="hidden">Press ENTER to Start</p>
     </div>
 
@@ -33,6 +45,7 @@
         <button id="play-again-btn">Play Again</button>
     </div>
 
+    <audio id="game-music" loop></audio>
     <script src="script.js"></script>
 </body>
 </html>
