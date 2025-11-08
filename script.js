@@ -34,6 +34,25 @@ document.addEventListener('DOMContentLoaded', () => {
     let trackMin = -30;
     let trackMax = 30;
 
+    const scenarios = {
+        'UV': {
+            'both_win': "Ultraviolet Victory!",
+            'both_lose': "Violet Demise."
+        },
+        'IO': {
+            'both_win': "I/O Error: Success!",
+            'both_lose': "Binary Sunset."
+        }
+    };
+
+    // Scenario State
+    let player1_finished = false;
+    let player2_finished = false;
+    let player1_outcome = null; // 'win' or 'loss'
+    let player2_outcome = null; // 'win' or 'loss'
+    let first_finisher = null; // 1 or 2
+    let first_finisher_outcome = null; // 'win' or 'loss'
+
     // --- Helper Functions ---
     function isValidKey(key) {
         return key.length === 1 && key >= 'A' && key <= 'Z';
@@ -86,6 +105,14 @@ document.addEventListener('DOMContentLoaded', () => {
         p2KeyDown = false;
         trackMin = -30;
         trackMax = 30;
+
+        // Reset Scenario State
+        player1_finished = false;
+        player2_finished = false;
+        player1_outcome = null;
+        player2_outcome = null;
+        first_finisher = null;
+        first_finisher_outcome = null;
 
 
         // Reset UI
@@ -239,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
             player1_position--;
             movePlayer(1);
             if (player1_position === trackMin) {
-                showShameScreen(1);
+                playerFinished(1, 'loss');
             } else {
                 startPenaltyTimer(1); // Restart the timer
             }
@@ -247,11 +274,75 @@ document.addEventListener('DOMContentLoaded', () => {
             player2_position--;
             movePlayer(2);
             if (player2_position === trackMin) {
-                showShameScreen(2);
+                playerFinished(2, 'loss');
             } else {
                 startPenaltyTimer(2);
             }
         }
+    }
+
+    function playerFinished(playerNumber, outcome) {
+        if (playerNumber === 1 && !player1_finished) {
+            player1_finished = true;
+            player1_outcome = outcome;
+            clearTimeout(player1_penaltyTimer);
+            if (!first_finisher) {
+                first_finisher = 1;
+                first_finisher_outcome = outcome;
+            }
+        } else if (playerNumber === 2 && !player2_finished) {
+            player2_finished = true;
+            player2_outcome = outcome;
+            clearTimeout(player2_penaltyTimer);
+            if (!first_finisher) {
+                first_finisher = 2;
+                first_finisher_outcome = outcome;
+            }
+        }
+        checkIfBothFinished();
+    }
+
+    function checkIfBothFinished() {
+        if (player1_finished && player2_finished) {
+            gameState = "finished";
+            gameMusic.pause();
+            gameMusic.currentTime = 0;
+            document.removeEventListener('keydown', raceKeyListener);
+            document.removeEventListener('keyup', raceKeyUpListener);
+
+            if (!checkForScenarioEnding()) {
+                // Default to original win/loss behavior based on the first finisher
+                if (first_finisher_outcome === 'win') {
+                    showWinScreen(first_finisher);
+                } else {
+                    showShameScreen(first_finisher);
+                }
+            }
+        }
+    }
+
+    function checkForScenarioEnding() {
+        const combo = [player1_key, player2_key].sort().join('');
+        const scenario = scenarios[combo];
+        if (!scenario) return false;
+
+        let outcome_key = null;
+        if (player1_outcome === 'win' && player2_outcome === 'win') {
+            outcome_key = 'both_win';
+        } else if (player1_outcome === 'loss' && player2_outcome === 'loss') {
+            outcome_key = 'both_lose';
+        }
+
+        if (outcome_key && scenario[outcome_key]) {
+            const msg = `Scenario Ending: ${scenario[outcome_key]}`;
+            gameScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            endMessage.textContent = msg;
+            speak(msg);
+            return true;
+        }
+
+        return false;
     }
 
     function movePlayer(playerNumber) {
@@ -347,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
             movePlayer(1);
             startPenaltyTimer(1);
             if (player1_position === trackMax) {
-                showWinScreen(1);
+                playerFinished(1, 'win');
             }
         } else if (key === player2_key && !p2KeyDown) {
             p2KeyDown = true;
@@ -356,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
             movePlayer(2);
             startPenaltyTimer(2);
             if (player2_position === trackMax) {
-                showWinScreen(2);
+                playerFinished(2, 'win');
             }
         }
     };
