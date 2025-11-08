@@ -10,11 +10,22 @@
     <div id="setup-screen">
         <h1 id="p1-prompt">Player 1: Press Your Key</h1>
         <h1 id="p2-prompt">Player 2: (Waiting...)</h1>
+
         <div id="difficulty-selection">
+            <h3>Difficulty:</h3>
             <button class="difficulty-btn active" id="easy-btn">EASY</button>
             <button class="difficulty-btn" id="medium-btn">MEDIUM</button>
             <button class="difficulty-btn" id="hard-btn">HARD</button>
+            <button class="difficulty-btn" id="extreme-btn">EXTREME</button>
         </div>
+
+        <div id="track-length-selection">
+            <h3>Track Length:</h3>
+            <button class="length-btn active" id="short-track">SHORT</button>
+            <button class="length-btn" id="medium-track">MEDIUM</button>
+            <button class="length-btn" id="long-track">LONG</button>
+        </div>
+
         <div id="music-selection">
             <h3>Choose Your Music:</h3>
             <label>
@@ -46,6 +57,11 @@
     </div>
 
     <audio id="game-music" loop></audio>
+    <audio id="sfx-countdown"></audio>
+    <audio id="sfx-keypress"></audio>
+    <audio id="sfx-win"></audio>
+    <audio id="sfx-lose"></audio>
+
     <script src="script.js"></script>
 </body>
 </html>

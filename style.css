@@ -63,7 +63,7 @@ h1, h3 {
     text-transform: uppercase;
 }
 
-#difficulty-selection button, #play-again-btn {
+#difficulty-selection button, #play-again-btn, .length-btn {
     background-color: transparent;
     border: 2px solid;
     padding: 10px 20px;
@@ -78,7 +78,7 @@ h1, h3 {
 }
 
 
-#difficulty-selection button.active {
+#difficulty-selection button.active, .length-btn.active {
     background-color: #0ff;
     color: #000;
     animation: none;

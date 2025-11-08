@@ -12,8 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const endMessage = document.getElementById('end-message');
     const playAgainBtn = document.getElementById('play-again-btn');
     const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+    const lengthBtns = document.querySelectorAll('.length-btn');
     const gameMusic = document.getElementById('game-music');
     const musicSelection = document.getElementById('music-selection');
+    const sfxCountdown = document.getElementById('sfx-countdown');
+    const sfxKeyPress = document.getElementById('sfx-keypress');
+    const sfxWin = document.getElementById('sfx-win');
+    const sfxLose = document.getElementById('sfx-lose');
 
     // Game State
     let player1_key = null;
@@ -26,11 +31,21 @@ document.addEventListener('DOMContentLoaded', () => {
     let gameState = "setup";
     let p1KeyDown = false;
     let p2KeyDown = false;
-
+    let trackMin = -30;
+    let trackMax = 30;
 
     // --- Helper Functions ---
     function isValidKey(key) {
         return key.length === 1 && key >= 'A' && key <= 'Z';
+    }
+
+    function playSound(sfx) {
+        try {
+            sfx.currentTime = 0;
+            sfx.play();
+        } catch (error) {
+            console.error("SFX could not be played.", error);
+        }
     }
 
     function speak(text) {
@@ -69,6 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState = "setup";
         p1KeyDown = false;
         p2KeyDown = false;
+        trackMin = -30;
+        trackMax = 30;
 
 
         // Reset UI
@@ -82,8 +99,11 @@ document.addEventListener('DOMContentLoaded', () => {
         p1Track.innerHTML = '';
         p2Track.innerHTML = '';
         document.getElementById('easy-btn').classList.add('active');
-        document.getElementById('medium-btn').classList.remove('active');
-        document.getElementById('hard-btn').classList.remove('active');
+        document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('easy-btn').classList.add('active');
+        document.querySelectorAll('.length-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('short-track').classList.add('active');
+
 
         // Re-attach setup listener
         document.addEventListener('keydown', setupKeyListener);
@@ -122,14 +142,17 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             messageArea.textContent = '3';
             speak('3');
+            playSound(sfxCountdown);
         }, 0);
         setTimeout(() => {
             messageArea.textContent = '2';
             speak('2');
+            playSound(sfxCountdown);
         }, 1000);
         setTimeout(() => {
             messageArea.textContent = '1';
             speak('1');
+            playSound(sfxCountdown);
         }, 2000);
         setTimeout(() => {
             messageArea.textContent = 'GO!';
@@ -154,7 +177,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function generateTracks() {
-        for (let i = -30; i <= 30; i++) {
+        p1Track.innerHTML = '';
+        p2Track.innerHTML = '';
+        for (let i = trackMin; i <= trackMax; i++) {
             const cell1 = document.createElement('div');
             cell1.classList.add('cell');
             cell1.textContent = i;
@@ -213,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (playerNumber === 1) {
             player1_position--;
             movePlayer(1);
-            if (player1_position === -30) {
+            if (player1_position === trackMin) {
                 showShameScreen(1);
             } else {
                 startPenaltyTimer(1); // Restart the timer
@@ -221,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             player2_position--;
             movePlayer(2);
-            if (player2_position === -30) {
+            if (player2_position === trackMin) {
                 showShameScreen(2);
             } else {
                 startPenaltyTimer(2);
@@ -249,6 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showWinScreen(winnerPlayerNumber) {
         gameState = "finished";
+        playSound(sfxWin);
         gameMusic.pause();
         gameMusic.currentTime = 0;
         clearTimeout(player1_penaltyTimer);
@@ -268,6 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showShameScreen(loserPlayerNumber) {
         gameState = "finished";
+        playSound(sfxLose);
         gameMusic.pause();
         gameMusic.currentTime = 0;
         clearTimeout(player1_penaltyTimer);
@@ -316,17 +343,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (key === player1_key && !p1KeyDown) {
             p1KeyDown = true;
             player1_position++;
+            playSound(sfxKeyPress);
             movePlayer(1);
             startPenaltyTimer(1);
-            if (player1_position === 30) {
+            if (player1_position === trackMax) {
                 showWinScreen(1);
             }
         } else if (key === player2_key && !p2KeyDown) {
             p2KeyDown = true;
             player2_position++;
+            playSound(sfxKeyPress);
             movePlayer(2);
             startPenaltyTimer(2);
-            if (player2_position === 30) {
+            if (player2_position === trackMax) {
                 showWinScreen(2);
             }
         }
@@ -349,6 +378,26 @@ document.addEventListener('DOMContentLoaded', () => {
             if (btn.id === 'easy-btn') penaltyTime = 2000;
             if (btn.id === 'medium-btn') penaltyTime = 1000;
             if (btn.id === 'hard-btn') penaltyTime = 500;
+            if (btn.id === 'extreme-btn') penaltyTime = 100;
+        });
+    });
+
+    lengthBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            lengthBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if (btn.id === 'short-track') {
+                trackMin = -30;
+                trackMax = 30;
+            }
+            if (btn.id === 'medium-track') {
+                trackMin = -100;
+                trackMax = 100;
+            }
+            if (btn.id === 'long-track') {
+                trackMin = -200;
+                trackMax = 200;
+            }
         });
     });
 
