@@ -1,0 +1,24 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY} # Can be set in .env file or shell
+    volumes:
+      - ./backend:/app # Hot reload for development
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Prevent host node_modules from overwriting container's
+    depends_on:
+      - backend
+    # We need to ensure tailwind builds if using raw CSS in dev,
+    # but 'npm run dev' usually handles HMR if configured.
+    # For simplicity in this dev setup:
+    command: npm run dev -- --host

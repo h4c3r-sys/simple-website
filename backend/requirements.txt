@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+duckduckgo-search
+google-generativeai
+beautifulsoup4
+requests
+python-multipart
