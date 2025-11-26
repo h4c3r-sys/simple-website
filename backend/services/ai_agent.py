@@ -3,9 +3,12 @@ import json
 import os
 
 # In a real scenario, use environment variables.
-# For this specific task, I will use the key provided by the user in the prompt,
-# but I will structure it to check env var first.
-API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyAItEW2xVnRYDAIoQJZ8UUa2lpfDp3qdHg")
+API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not API_KEY:
+    # Fallback only for local testing if explicitly set in code,
+    # but preferably rely on env vars for security.
+    print("Warning: GEMINI_API_KEY not set in environment.")
 
 genai.configure(api_key=API_KEY)
 

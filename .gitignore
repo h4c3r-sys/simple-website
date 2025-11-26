@@ -1,5 +1,6 @@
 backend/venv/
 frontend/node_modules/
+frontend/.vite/
 *.log
 __pycache__/
 .pytest_cache/
