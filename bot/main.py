@@ -166,6 +166,107 @@ async def setup(interaction: discord.Interaction, log_channel: discord.TextChann
 
     await interaction.response.send_message(f"✅ Setup complete! Logging to <#{target_channel_id}>.", ephemeral=True)
 
+@bot.tree.command(name="safetest", description="Clone messages from a target server to this server for safe testing")
+@app_commands.describe(target_server_id="ID of the server to copy messages from")
+@app_commands.checks.has_permissions(administrator=True)
+async def safetest(interaction: discord.Interaction, target_server_id: str):
+    """
+    Copies messages from a target server to the current server using Webhooks.
+    This creates a safe environment to test the bot's spam detection on real data.
+    """
+    await interaction.response.defer(thinking=True)
+
+    try:
+        target_guild_id = int(target_server_id)
+        target_guild = bot.get_guild(target_guild_id)
+
+        if not target_guild:
+            # Try to fetch if not in cache (requires bot to be in that server)
+            try:
+                target_guild = await bot.fetch_guild(target_guild_id)
+            except discord.Forbidden:
+                await interaction.followup.send("❌ I am not in the target server or lack permissions to view it.")
+                return
+            except discord.NotFound:
+                 await interaction.followup.send("❌ Target server not found.")
+                 return
+
+    except ValueError:
+        await interaction.followup.send("❌ Invalid Server ID.")
+        return
+
+    await interaction.followup.send(f"🔄 Starting Safe Test Clone from **{target_guild.name}**. This may take a while...")
+    logger.info(f"Starting safetest clone from {target_guild.name} ({target_guild.id}) to {interaction.guild.name}")
+
+    count = 0
+    # Iterate through text channels in the target guild
+    # Note: Fetching channels from a guild we just fetched might need API call
+    try:
+        channels = await target_guild.fetch_channels()
+    except Exception as e:
+        logger.error(f"Failed to fetch channels: {e}")
+        await interaction.channel.send(f"❌ Error fetching channels: {e}")
+        return
+
+    current_guild = interaction.guild
+
+    for channel in channels:
+        if not isinstance(channel, discord.TextChannel):
+            continue
+
+        # 1. Create matching channel in current guild if not exists
+        target_channel_name = channel.name
+        dest_channel = discord.utils.get(current_guild.text_channels, name=target_channel_name)
+
+        if not dest_channel:
+            try:
+                dest_channel = await current_guild.create_text_channel(name=target_channel_name, reason="Safe Test Clone")
+                await asyncio.sleep(1) # Avoid rate limits
+            except discord.Forbidden:
+                logger.warning(f"Cannot create channel {target_channel_name}")
+                continue
+
+        # 2. Create Webhook in destination channel
+        webhook = None
+        try:
+            webhooks = await dest_channel.webhooks()
+            if webhooks:
+                webhook = webhooks[0]
+            else:
+                webhook = await dest_channel.create_webhook(name="SafeTest Clone Hook")
+        except Exception as e:
+            logger.warning(f"Failed to manage webhook in {dest_channel.name}: {e}")
+            continue
+
+        # 3. Fetch and Repost Messages
+        # We limit to 500 messages per channel to prevent infinite loops and hour-long waits,
+        # unless it's critical to have ALL. Given "copy all messages", we try a larger batch but safe.
+        try:
+            async for msg in channel.history(limit=500, oldest_first=False):
+                if not msg.content:
+                    continue
+
+                # Send via Webhook
+                try:
+                    await webhook.send(
+                        content=msg.content,
+                        username=msg.author.name,
+                        avatar_url=msg.author.display_avatar.url,
+                        wait=True # Wait to respect rate limits
+                    )
+                    count += 1
+                    # Small sleep to be nice to API
+                    await asyncio.sleep(0.5)
+                except Exception as e:
+                    logger.warning(f"Failed to copy message: {e}")
+        except discord.Forbidden:
+            logger.warning(f"Cannot read history from {channel.name}")
+            continue
+
+        await asyncio.sleep(2) # Buffer between channels
+
+    await interaction.channel.send(f"✅ Safe Test Clone Complete! Copied {count} messages.")
+
 @bot.tree.command(name="scan", description="Scan messages to identify scam keywords")
 @app_commands.describe(period="Time period to scan")
 @app_commands.choices(period=[
@@ -272,7 +373,16 @@ async def on_message(message):
     Active protection listener.
     Checks every new message against the database of BannedWords.
     """
-    if message.author.bot or not message.guild:
+    # Ignore DMs
+    if not message.guild:
+        return
+
+    # Check if author is bot.
+    # CRITICAL CHANGE FOR SAFETEST: We MUST allow Webhooks to be scanned,
+    # because /safetest uses webhooks to simulate users.
+    # Typically message.author.bot is True for webhooks.
+    # We check if it's a specific bot user, but allow webhooks.
+    if message.author.bot and not message.webhook_id:
         return
 
     # Check for banned words
@@ -308,12 +418,13 @@ async def on_message(message):
             except discord.Forbidden:
                 logger.warning("Failed to delete message: Missing permissions")
 
-            # Timeout 1h
-            try:
-                duration = datetime.timedelta(hours=1)
-                await message.author.timeout(duration, reason=f"Used banned word: {detected_word}")
-            except discord.Forbidden:
-                logger.warning("Failed to timeout user: Missing permissions")
+            # Timeout 1h (Only works on real members, not webhooks)
+            if isinstance(message.author, discord.Member):
+                try:
+                    duration = datetime.timedelta(hours=1)
+                    await message.author.timeout(duration, reason=f"Used banned word: {detected_word}")
+                except discord.Forbidden:
+                    logger.warning("Failed to timeout user: Missing permissions")
 
             # Log
             embed = discord.Embed(title="🚨 Scam/Spam Detected", color=discord.Color.red(), timestamp=datetime.datetime.now())

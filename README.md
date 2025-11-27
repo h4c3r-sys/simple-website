@@ -37,6 +37,8 @@ A Discord bot that uses machine learning (TF-IDF analysis) to identify potential
    - **Moderate Members**: Required to timeout users.
    - **Kick Members**: Required for the "Kick" button in violation logs.
    - **Ban Members**: Required for the "Ban" button in violation logs.
+   - **Manage Channels**: Required for the `/safetest` command to create test channels.
+   - **Manage Webhooks**: Required for the `/safetest` command to clone messages.
 
    **Privileged Intents (Enable in Developer Portal):**
    - **Message Content Intent**: REQUIRED. The bot needs this to read message text for scanning and checking against the ban list.
