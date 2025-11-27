@@ -272,7 +272,7 @@ async def on_message(message):
     Active protection listener.
     Checks every new message against the database of BannedWords.
     """
-    if message.author.bot:
+    if message.author.bot or not message.guild:
         return
 
     # Check for banned words

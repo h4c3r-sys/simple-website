@@ -23,8 +23,26 @@ A Discord bot that uses machine learning (TF-IDF analysis) to identify potential
      cp .env.example .env
      ```
    - Edit `.env` and paste your `DISCORD_TOKEN`.
+   - (Optional) Add `OPENAI_API_KEY` or `GEMINI_API_KEY` to use advanced AI analysis instead of local machine learning.
 
-3. **Run the Bot**
+3. **Required Permissions**
+   To function correctly, the bot requires the following permissions and intents:
+
+   **Bot Permissions (Invite Link):**
+   - **View Channels**: Required to read messages in channels.
+   - **Send Messages**: Required to send logs and responses.
+   - **Embed Links**: Required for formatted logs.
+   - **Read Message History**: Critical for the `/scan` command to learn from past data.
+   - **Manage Messages**: Required to delete messages containing banned words.
+   - **Moderate Members**: Required to timeout users.
+   - **Kick Members**: Required for the "Kick" button in violation logs.
+   - **Ban Members**: Required for the "Ban" button in violation logs.
+
+   **Privileged Intents (Enable in Developer Portal):**
+   - **Message Content Intent**: REQUIRED. The bot needs this to read message text for scanning and checking against the ban list.
+   - **Server Members Intent**: REQUIRED. Needed to perform member-related actions (like fetching member objects for bans/kicks).
+
+4. **Run the Bot**
    ```bash
    docker-compose up --build -d
    ```

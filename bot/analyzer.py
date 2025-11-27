@@ -194,10 +194,10 @@ class SpamAnalyzer:
         return prompt
 
     def analyze_with_openai(self, spam_msgs, ham_msgs):
-        openai.api_key = self.openai_key
+        client = openai.OpenAI(api_key=self.openai_key)
         prompt = self._prepare_llm_prompt(spam_msgs, ham_msgs)
 
-        response = openai.chat.completions.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful data analyst bot."},

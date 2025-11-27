@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, BigInteger, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, BigInteger, Text, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from bot.database import Base
@@ -22,6 +22,7 @@ class BannedWord(Base):
     The on_message listener checks against this table.
     """
     __tablename__ = "banned_words"
+    __table_args__ = (UniqueConstraint('guild_id', 'word', name='_guild_word_uc'),)
 
     id = Column(Integer, primary_key=True, index=True)
     guild_id = Column(BigInteger, index=True, nullable=False)
