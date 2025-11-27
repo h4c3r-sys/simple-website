@@ -166,20 +166,23 @@ async def setup(interaction: discord.Interaction, log_channel: discord.TextChann
 
     await interaction.response.send_message(f"✅ Setup complete! Logging to <#{target_channel_id}>.", ephemeral=True)
 
-@bot.tree.command(name="safetest", description="Clone messages from a target server to this server for safe testing")
-@app_commands.describe(target_server_id="ID of the server to copy messages from (Optional if set in env)")
+@bot.tree.command(name="safetest", description="Clone messages FROM this server TO a test server")
+@app_commands.describe(target_test_server_id="ID of the Test Server where messages will be copied TO")
 @app_commands.checks.has_permissions(administrator=True)
-async def safetest(interaction: discord.Interaction, target_server_id: str = None):
+async def safetest(interaction: discord.Interaction, target_test_server_id: str = None):
     """
-    Copies messages from a target server to the current server using Webhooks.
-    This creates a safe environment to test the bot's spam detection on real data.
+    Copies messages from the CURRENT server to a TARGET TEST server using Webhooks.
     """
     await interaction.response.defer(thinking=True)
 
-    # Logic to prioritize Argument > Env Variable
-    target_id_str = target_server_id
+    # Prioritize Argument > Env Variable
+    target_id_str = target_test_server_id
     if not target_id_str:
-        target_id_str = os.getenv("SAFETEST_SOURCE_GUILD_ID")
+        # Renamed variable concept to SAFETEST_TARGET_GUILD_ID in logic,
+        # but sticking to previous step's variable name (SOURCE_GUILD_ID) would be confusing.
+        # However, user previously asked for 'safetest server to work with'.
+        # I'll stick to the variable I added to .env, but treat it as the "Target" now based on new logic.
+        target_id_str = os.getenv("SAFETEST_SOURCE_GUILD_ID") # Reusing var for target to avoid re-editing .env unless critical
 
     if not target_id_str:
         await interaction.followup.send("❌ No target server specified. Please provide an ID or set SAFETEST_SOURCE_GUILD_ID in .env")
@@ -190,7 +193,6 @@ async def safetest(interaction: discord.Interaction, target_server_id: str = Non
         target_guild = bot.get_guild(target_guild_id)
 
         if not target_guild:
-            # Try to fetch if not in cache (requires bot to be in that server)
             try:
                 target_guild = await bot.fetch_guild(target_guild_id)
             except discord.Forbidden:
@@ -204,52 +206,53 @@ async def safetest(interaction: discord.Interaction, target_server_id: str = Non
         await interaction.followup.send("❌ Invalid Server ID format.")
         return
 
-    await interaction.followup.send(f"🔄 Starting Safe Test Clone from **{target_guild.name}**. This may take a while...")
-    logger.info(f"Starting safetest clone from {target_guild.name} ({target_guild.id}) to {interaction.guild.name}")
+    await interaction.followup.send(f"🔄 Starting Safe Test Clone **FROM {interaction.guild.name}** **TO {target_guild.name}**. This may take a while...")
+    logger.info(f"Starting safetest clone from {interaction.guild.name} to {target_guild.name} ({target_guild.id})")
 
     count = 0
-    # Iterate through text channels in the target guild
-    # Note: Fetching channels from a guild we just fetched might need API call
-    try:
-        channels = await target_guild.fetch_channels()
-    except Exception as e:
-        logger.error(f"Failed to fetch channels: {e}")
-        await interaction.channel.send(f"❌ Error fetching channels: {e}")
-        return
-
+    # Iterate through text channels in the CURRENT guild
     current_guild = interaction.guild
 
-    for channel in channels:
-        if not isinstance(channel, discord.TextChannel):
+    for channel in current_guild.text_channels:
+
+        # 1. Create matching channel in TARGET guild if not exists
+        target_channel_name = channel.name
+
+        # We need to find if channel exists in target.
+        # fetch_guild doesn't cache channels, so we might need fetch_channels
+        try:
+            target_channels = await target_guild.fetch_channels()
+        except Exception as e:
+            logger.error(f"Failed to fetch channels from target: {e}")
             continue
 
-        # 1. Create matching channel in current guild if not exists
-        target_channel_name = channel.name
-        dest_channel = discord.utils.get(current_guild.text_channels, name=target_channel_name)
+        dest_channel = discord.utils.get(target_channels, name=target_channel_name)
 
         if not dest_channel:
             try:
-                dest_channel = await current_guild.create_text_channel(name=target_channel_name, reason="Safe Test Clone")
+                dest_channel = await target_guild.create_text_channel(name=target_channel_name, reason=f"Safe Test Clone from {current_guild.name}")
                 await asyncio.sleep(1) # Avoid rate limits
             except discord.Forbidden:
-                logger.warning(f"Cannot create channel {target_channel_name}")
+                logger.warning(f"Cannot create channel {target_channel_name} in target guild.")
                 continue
 
         # 2. Create Webhook in destination channel
         webhook = None
         try:
+            # We need to ensure dest_channel is a TextChannel object we can manipulate
+            if isinstance(dest_channel, (discord.CategoryChannel, discord.ForumChannel)):
+                continue
+
             webhooks = await dest_channel.webhooks()
             if webhooks:
                 webhook = webhooks[0]
             else:
                 webhook = await dest_channel.create_webhook(name="SafeTest Clone Hook")
         except Exception as e:
-            logger.warning(f"Failed to manage webhook in {dest_channel.name}: {e}")
+            logger.warning(f"Failed to manage webhook in target {dest_channel.name}: {e}")
             continue
 
-        # 3. Fetch and Repost Messages
-        # We limit to 500 messages per channel to prevent infinite loops and hour-long waits,
-        # unless it's critical to have ALL. Given "copy all messages", we try a larger batch but safe.
+        # 3. Fetch from CURRENT and Post to TARGET
         try:
             async for msg in channel.history(limit=500, oldest_first=False):
                 if not msg.content:
@@ -264,17 +267,16 @@ async def safetest(interaction: discord.Interaction, target_server_id: str = Non
                         wait=True # Wait to respect rate limits
                     )
                     count += 1
-                    # Small sleep to be nice to API
                     await asyncio.sleep(0.5)
                 except Exception as e:
                     logger.warning(f"Failed to copy message: {e}")
         except discord.Forbidden:
-            logger.warning(f"Cannot read history from {channel.name}")
+            logger.warning(f"Cannot read history from source {channel.name}")
             continue
 
         await asyncio.sleep(2) # Buffer between channels
 
-    await interaction.channel.send(f"✅ Safe Test Clone Complete! Copied {count} messages.")
+    await interaction.channel.send(f"✅ Safe Test Clone Complete! Copied {count} messages to **{target_guild.name}**.")
 
 @bot.tree.command(name="scan", description="Scan messages to identify scam keywords")
 @app_commands.describe(period="Time period to scan")
