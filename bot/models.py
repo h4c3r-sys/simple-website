@@ -4,6 +4,9 @@ from sqlalchemy.sql import func
 from bot.database import Base
 
 class GuildSettings(Base):
+    """
+    Stores per-guild configuration, such as the channel ID where logs should be sent.
+    """
     __tablename__ = "guild_settings"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -14,6 +17,10 @@ class GuildSettings(Base):
     auto_ban_enabled = Column(Boolean, default=True)
 
 class BannedWord(Base):
+    """
+    Stores the actual list of prohibited words for each guild.
+    The on_message listener checks against this table.
+    """
     __tablename__ = "banned_words"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -25,6 +32,10 @@ class BannedWord(Base):
     source = Column(String, default="auto") # "auto" or "manual"
 
 class StoredMessage(Base):
+    """
+    Archive of messages scanned from the server.
+    These are used as the dataset for the Machine Learning analysis.
+    """
     __tablename__ = "stored_messages"
 
     id = Column(Integer, primary_key=True, index=True)

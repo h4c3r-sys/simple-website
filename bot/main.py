@@ -18,17 +18,25 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ScamBlockerBot(commands.Bot):
+    """
+    Main Bot Class.
+    Handles command synchronization and database initialization on startup.
+    """
     def __init__(self):
         intents = discord.Intents.default()
-        intents.message_content = True
-        intents.members = True # Needed to kick/ban
+        intents.message_content = True # Required to read message content for scanning/protection
+        intents.members = True # Needed to kick/ban members
         super().__init__(command_prefix="!", intents=intents)
         self.session_maker = AsyncSessionLocal
 
     async def setup_hook(self):
-        # Initialize DB
+        """
+        Executed when the bot starts up.
+        Initializes the database and syncs slash commands with Discord.
+        """
+        # Initialize DB tables
         await init_db()
-        # Sync commands
+        # Sync commands to the server (globally)
         await self.tree.sync()
         logger.info("Commands synced.")
 
@@ -36,6 +44,9 @@ bot = ScamBlockerBot()
 
 # --- UTILS ---
 async def get_log_channel(guild, session):
+    """
+    Retrieves the configured log channel for a guild from the database.
+    """
     result = await session.execute(select(GuildSettings).where(GuildSettings.guild_id == guild.id))
     settings = result.scalars().first()
     if settings and settings.log_channel_id:
@@ -43,6 +54,9 @@ async def get_log_channel(guild, session):
     return None
 
 async def log_action(guild, session, embed):
+    """
+    Sends a log embed to the configured channel.
+    """
     channel = await get_log_channel(guild, session)
     if channel:
         try:
@@ -54,6 +68,10 @@ async def log_action(guild, session, embed):
 # --- VIEWS ---
 
 class ApprovalView(discord.ui.View):
+    """
+    View displayed after a Scan.
+    Allows admins to Approve or Disapprove the suggested ban list.
+    """
     def __init__(self, suggested_words, session_maker):
         super().__init__(timeout=None)
         self.suggested_words = suggested_words
@@ -63,6 +81,7 @@ class ApprovalView(discord.ui.View):
     async def approve(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
         async with self.session_maker() as session:
+            # Batch insert suggested words into the database
             for word in self.suggested_words:
                 stmt = insert(BannedWord).values(guild_id=interaction.guild_id, word=word).on_conflict_do_nothing()
                 await session.execute(stmt)
@@ -77,6 +96,10 @@ class ApprovalView(discord.ui.View):
         self.stop()
 
 class ViolationView(discord.ui.View):
+    """
+    View displayed on a violation log.
+    Provides buttons for admins to take further action on a user.
+    """
     def __init__(self, user_id, message_content):
         super().__init__(timeout=None)
         self.user_id = user_id
@@ -123,6 +146,9 @@ class ViolationView(discord.ui.View):
 @bot.tree.command(name="setup", description="Configure the bot (e.g., log channel)")
 @app_commands.checks.has_permissions(administrator=True)
 async def setup(interaction: discord.Interaction, log_channel: discord.TextChannel = None):
+    """
+    Sets the channel where violation logs will be sent.
+    """
     async with bot.session_maker() as session:
         # Check if settings exist
         result = await session.execute(select(GuildSettings).where(GuildSettings.guild_id == interaction.guild_id))
@@ -151,9 +177,12 @@ async def setup(interaction: discord.Interaction, log_channel: discord.TextChann
 ])
 @app_commands.checks.has_permissions(administrator=True)
 async def scan(interaction: discord.Interaction, period: app_commands.Choice[str]):
+    """
+    Scans the channel history for messages, saves them to DB, and triggers the SpamAnalyzer.
+    """
     await interaction.response.defer(thinking=True)
 
-    # Calculate cutoff
+    # Calculate cutoff date based on user selection
     now = datetime.datetime.now(datetime.timezone.utc)
     cutoff = None
     if period.value != "all":
@@ -170,17 +199,14 @@ async def scan(interaction: discord.Interaction, period: app_commands.Choice[str
         for channel in interaction.guild.text_channels:
             try:
                 # We fetch history. Note: This can be slow.
-                # We'll use a limit per channel to avoid timeouts if "all" is huge,
-                # but user asked for "scan all messages". We try our best.
-                # Even for "Last Year", fetching unlimited messages can time out the interaction.
-                # We set a high safety cap.
+                # We set a high safety cap to avoid hanging on massive channels.
                 limit = 10000
                 if period.value == "all":
                     limit = 20000
 
                 async for msg in channel.history(limit=limit, after=cutoff):
                     if msg.content:
-                        # Save to DB for training
+                        # Save to DB for future training/history
                         stmt = insert(StoredMessage).values(
                             message_id=msg.id,
                             guild_id=interaction.guild_id,
@@ -213,7 +239,7 @@ async def scan(interaction: discord.Interaction, period: app_commands.Choice[str
     df = pd.DataFrame(messages_data)
     analyzer = SpamAnalyzer()
 
-    # Run in executor to avoid blocking event loop
+    # Run analysis in a thread executor to avoid blocking the main Discord event loop
     loop = asyncio.get_running_loop()
     suggested_words = await loop.run_in_executor(None, analyzer.analyze_and_suggest_bans, df)
 
@@ -242,6 +268,10 @@ async def scan(interaction: discord.Interaction, period: app_commands.Choice[str
 
 @bot.event
 async def on_message(message):
+    """
+    Active protection listener.
+    Checks every new message against the database of BannedWords.
+    """
     if message.author.bot:
         return
 
@@ -255,18 +285,14 @@ async def on_message(message):
             return
 
         content_lower = message.content.lower()
-        # Basic check: word boundaries? User didn't specify, assuming direct inclusion for now
-        # but regex is safer to avoid Scunthorpe problem.
-        # For simplicity in this iteration: direct check if word is standalone or we check substring
-        # User requirement: "if someone says word with this scam message".
-        # I will do simple substring check but padded with spaces or robust check later.
-        # Let's do a simple check for now.
 
         detected = False
         detected_word = ""
         for word in banned_words:
             # Use regex to match whole words only to avoid the Scunthorpe problem
             # e.g., banning "hack" should not ban "hackathon"
+            # (?<!\w) means "not preceded by a word character"
+            # (?!\w) means "not followed by a word character"
             pattern = r"(?<!\w)" + re.escape(word.lower()) + r"(?!\w)"
             if re.search(pattern, content_lower):
                 detected = True
