@@ -69,3 +69,34 @@ The bot solves the "Cold Start" problem (learning what spam looks like without a
 2. Applying heuristics (links + known spam seed words) to tentatively label a subset of messages as "Potential Spam".
 3. Using TF-IDF (Term Frequency-Inverse Document Frequency) to find other words that appear frequently in that "Potential Spam" set but rarely in the "Clean" set.
 4. Suggesting these distinctive words to the admin.
+
+## Maintenance & Debugging
+
+### Viewing Logs
+
+To see what the bot is doing in real-time (including scan progress and debug info):
+
+```bash
+./scripts/view_logs.sh
+# OR manually:
+docker-compose logs -f bot
+```
+
+### Accessing the Database
+
+To inspect the stored messages or banned words directly via SQL:
+
+1. **Via Command Line:**
+   ```bash
+   ./scripts/access_db.sh
+   # Opens a psql shell. Example queries:
+   # SELECT * FROM banned_words;
+   # SELECT count(*) FROM stored_messages;
+   ```
+
+2. **Via GUI (DBeaver, TablePlus, etc.):**
+   - **Host:** `localhost`
+   - **Port:** `5432`
+   - **User:** `postgres`
+   - **Password:** `password` (or whatever is in your .env)
+   - **Database:** `discord_bot_db`
