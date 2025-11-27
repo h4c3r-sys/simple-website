@@ -167,17 +167,26 @@ async def setup(interaction: discord.Interaction, log_channel: discord.TextChann
     await interaction.response.send_message(f"✅ Setup complete! Logging to <#{target_channel_id}>.", ephemeral=True)
 
 @bot.tree.command(name="safetest", description="Clone messages from a target server to this server for safe testing")
-@app_commands.describe(target_server_id="ID of the server to copy messages from")
+@app_commands.describe(target_server_id="ID of the server to copy messages from (Optional if set in env)")
 @app_commands.checks.has_permissions(administrator=True)
-async def safetest(interaction: discord.Interaction, target_server_id: str):
+async def safetest(interaction: discord.Interaction, target_server_id: str = None):
     """
     Copies messages from a target server to the current server using Webhooks.
     This creates a safe environment to test the bot's spam detection on real data.
     """
     await interaction.response.defer(thinking=True)
 
+    # Logic to prioritize Argument > Env Variable
+    target_id_str = target_server_id
+    if not target_id_str:
+        target_id_str = os.getenv("SAFETEST_SOURCE_GUILD_ID")
+
+    if not target_id_str:
+        await interaction.followup.send("❌ No target server specified. Please provide an ID or set SAFETEST_SOURCE_GUILD_ID in .env")
+        return
+
     try:
-        target_guild_id = int(target_server_id)
+        target_guild_id = int(target_id_str)
         target_guild = bot.get_guild(target_guild_id)
 
         if not target_guild:
@@ -185,14 +194,14 @@ async def safetest(interaction: discord.Interaction, target_server_id: str):
             try:
                 target_guild = await bot.fetch_guild(target_guild_id)
             except discord.Forbidden:
-                await interaction.followup.send("❌ I am not in the target server or lack permissions to view it.")
+                await interaction.followup.send(f"❌ I am not in the target server ({target_guild_id}) or lack permissions to view it.")
                 return
             except discord.NotFound:
                  await interaction.followup.send("❌ Target server not found.")
                  return
 
     except ValueError:
-        await interaction.followup.send("❌ Invalid Server ID.")
+        await interaction.followup.send("❌ Invalid Server ID format.")
         return
 
     await interaction.followup.send(f"🔄 Starting Safe Test Clone from **{target_guild.name}**. This may take a while...")
