@@ -55,6 +55,21 @@ A Discord bot that uses machine learning (TF-IDF analysis) to identify potential
    - Run `/scan [period]` (e.g., `/scan Last Month`) to start learning.
    - Approve the suggested ban words.
 
+## Role & Permission System
+
+The bot restricts commands and exemptions based on roles.
+
+### 1. Automatic Discovery
+By default, the bot automatically recognizes roles with these words in their name:
+*   **Admins:** "admin", "administrator", "owner", "manager" (Can run commands)
+*   **Mods:** "mod", "moderator", "staff" (Exempt from bans)
+
+### 2. Manual Configuration (`/role`)
+You can explicitly set any role as a Bot Admin or Mod:
+*   `/role add @RoleName Admin`: Allows running `/scan`, `/setup`, `/safetest`.
+*   `/role add @RoleName Mod`: Users with this role are **exempt** from being banned/timed out if they say a banned word (e.g. for discussion).
+*   `/role remove @RoleName`: Removes special permissions.
+
 ## Architecture
 
 - **`bot/main.py`**: Entry point, command handlers, and event listeners.

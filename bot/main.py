@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from bot.database import get_db, init_db, AsyncSessionLocal
-from bot.models import GuildSettings, BannedWord, StoredMessage
+from bot.models import GuildSettings, BannedWord, StoredMessage, BotRole
 from bot.analyzer import SpamAnalyzer
 from sqlalchemy import select, delete
 from sqlalchemy.dialects.postgresql import insert
@@ -102,6 +102,68 @@ def capture_debug_logs(filename):
         file_handler.close()
         sql_logger.setLevel(original_sql_level)
         pool_logger.setLevel(original_pool_level)
+
+async def check_permissions(interaction: discord.Interaction, required_level: str = 'admin'):
+    """
+    Checks if user has permission to run a command.
+    Hierarchy:
+    1. Guild Owner -> Allowed
+    2. Discord Administrator Permission -> Allowed (for admin level)
+    3. DB Role (BotRole) -> Allowed if matches level
+    4. Keyword in Role Name ("admin", "mod", etc.) -> Allowed
+    """
+    user = interaction.user
+    if user.id == interaction.guild.owner_id:
+        return True
+
+    if required_level == 'admin' and user.guild_permissions.administrator:
+        return True
+
+    # Check DB roles and Keywords
+    user_role_ids = [r.id for r in user.roles]
+    user_role_names = [r.name.lower() for r in user.roles]
+
+    # Keywords for auto-discovery
+    admin_keywords = {"admin", "administrator", "owner", "manager"}
+    mod_keywords = {"staff", "moderator", "mod"}
+    if required_level == 'mod':
+        mod_keywords.update(admin_keywords) # Admins are also mods
+
+    # Check keywords
+    for name in user_role_names:
+        if required_level == 'admin':
+            if any(k in name for k in admin_keywords):
+                return True
+        elif required_level == 'mod':
+            if any(k in name for k in mod_keywords):
+                return True
+
+    # Check DB
+    async with bot.session_maker() as session:
+        result = await session.execute(
+            select(BotRole).where(
+                BotRole.guild_id == interaction.guild_id,
+                BotRole.role_id.in_(user_role_ids)
+            )
+        )
+        db_roles = result.scalars().all()
+
+        for role in db_roles:
+            if role.role_type == 'admin':
+                return True # Admin counts for everything
+            if role.role_type == 'mod' and required_level == 'mod':
+                return True
+
+    return False
+
+# Custom check decorator
+def is_bot_admin():
+    async def predicate(interaction: discord.Interaction):
+        if await check_permissions(interaction, 'admin'):
+            return True
+        await interaction.response.send_message("❌ You do not have permission to run this command.", ephemeral=True)
+        return False
+    return app_commands.check(predicate)
 
 async def _run_scan_logic(interaction: discord.Interaction, period_value: str):
     """
@@ -204,6 +266,11 @@ class ApprovalView(discord.ui.View):
 
     @discord.ui.button(label="Approve All", style=discord.ButtonStyle.green)
     async def approve(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Check perms
+        if not await check_permissions(interaction, 'admin'):
+            await interaction.response.send_message("❌ Permission denied.", ephemeral=True)
+            return
+
         await interaction.response.defer()
         async with self.session_maker() as session:
             # Batch insert suggested words into the database
@@ -217,6 +284,11 @@ class ApprovalView(discord.ui.View):
 
     @discord.ui.button(label="Disapprove (Cancel)", style=discord.ButtonStyle.red)
     async def disapprove(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Check perms
+        if not await check_permissions(interaction, 'admin'):
+            await interaction.response.send_message("❌ Permission denied.", ephemeral=True)
+            return
+
         await interaction.response.send_message("❌ Cancelled. No words added.", ephemeral=True)
         self.stop()
 
@@ -229,6 +301,12 @@ class ViolationView(discord.ui.View):
         super().__init__(timeout=None)
         self.user_id = user_id
         self.message_content = message_content
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if not await check_permissions(interaction, 'mod'):
+            await interaction.response.send_message("❌ Permission denied.", ephemeral=True)
+            return False
+        return True
 
     @discord.ui.button(label="Ban User", style=discord.ButtonStyle.danger)
     async def ban_user(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -278,8 +356,35 @@ async def sync(ctx):
     await ctx.bot.tree.sync()
     await ctx.send("✅ Command tree synced.")
 
+@bot.tree.command(name="role", description="Manage bot roles (Admin/Mod)")
+@app_commands.describe(action="Add or Remove", role="The role to modify", type="Admin or Mod")
+@app_commands.choices(action=[
+    app_commands.Choice(name="Add", value="add"),
+    app_commands.Choice(name="Remove", value="remove")
+], type=[
+    app_commands.Choice(name="Admin", value="admin"),
+    app_commands.Choice(name="Mod", value="mod")
+])
+@is_bot_admin()
+async def manage_role(interaction: discord.Interaction, action: app_commands.Choice[str], role: discord.Role, type: app_commands.Choice[str] = None):
+
+    if action.value == "add" and not type:
+        await interaction.response.send_message("❌ You must specify a type (Admin/Mod) when adding a role.", ephemeral=True)
+        return
+
+    async with bot.session_maker() as session:
+        if action.value == "add":
+            stmt = insert(BotRole).values(guild_id=interaction.guild_id, role_id=role.id, role_type=type.value).on_conflict_do_nothing()
+            await session.execute(stmt)
+            await session.commit()
+            await interaction.response.send_message(f"✅ Added {role.mention} as Bot {type.name}.", ephemeral=True)
+        else:
+            await session.execute(delete(BotRole).where(BotRole.guild_id == interaction.guild_id, BotRole.role_id == role.id))
+            await session.commit()
+            await interaction.response.send_message(f"✅ Removed {role.mention} from bot roles.", ephemeral=True)
+
 @bot.tree.command(name="setup", description="Configure the bot (e.g., log channel)")
-@app_commands.checks.has_permissions(administrator=True)
+@is_bot_admin()
 async def setup(interaction: discord.Interaction, log_channel: discord.TextChannel = None):
     """
     Sets the channel where violation logs will be sent.
@@ -303,7 +408,7 @@ async def setup(interaction: discord.Interaction, log_channel: discord.TextChann
 
 @bot.tree.command(name="safetest", description="Clone messages FROM this server TO a test server")
 @app_commands.describe(target_test_server_id="ID of the Test Server where messages will be copied TO")
-@app_commands.checks.has_permissions(administrator=True)
+@is_bot_admin()
 async def safetest(interaction: discord.Interaction, target_test_server_id: str = None):
     """
     Copies messages from the CURRENT server to a TARGET TEST server using Webhooks.
@@ -416,7 +521,7 @@ async def safetest(interaction: discord.Interaction, target_test_server_id: str 
     app_commands.Choice(name="Last Year", value="365d"),
     app_commands.Choice(name="All Time", value="all"),
 ])
-@app_commands.checks.has_permissions(administrator=True)
+@is_bot_admin()
 async def scan(interaction: discord.Interaction, period: app_commands.Choice[str]):
     """
     Scans the channel history for messages, saves them to DB, and triggers the SpamAnalyzer.
@@ -433,7 +538,7 @@ async def scan(interaction: discord.Interaction, period: app_commands.Choice[str
     app_commands.Choice(name="Last Year", value="365d"),
     app_commands.Choice(name="All Time", value="all"),
 ])
-@app_commands.checks.has_permissions(administrator=True)
+@is_bot_admin()
 async def scanlogs(interaction: discord.Interaction, period: app_commands.Choice[str]):
     """
     Run a scan and return a downloadable log file containing all DB queries and API interactions.
@@ -475,12 +580,38 @@ async def on_message(message):
         return
 
     # Check if author is bot.
-    # CRITICAL CHANGE FOR SAFETEST: We MUST allow Webhooks to be scanned,
-    # because /safetest uses webhooks to simulate users.
-    # Typically message.author.bot is True for webhooks.
-    # We check if it's a specific bot user, but allow webhooks.
+    # Allow webhooks for safetest.
     if message.author.bot and not message.webhook_id:
         return
+
+    # Check for EXEMPT ROLES (Mods/Admins are allowed to say banned words)
+    if isinstance(message.author, discord.Member):
+        # We use a dummy interaction object or direct DB check logic here?
+        # Re-using check_permissions logic but specialized for non-interaction
+        is_exempt = False
+        user_role_ids = [r.id for r in message.author.roles]
+        user_role_names = [r.name.lower() for r in message.author.roles]
+
+        # Check keywords
+        exempt_keywords = {"admin", "administrator", "owner", "manager", "staff", "moderator", "mod"}
+        for name in user_role_names:
+            if any(k in name for k in exempt_keywords):
+                is_exempt = True
+                break
+
+        if not is_exempt:
+            async with bot.session_maker() as session:
+                result = await session.execute(
+                    select(BotRole).where(
+                        BotRole.guild_id == message.guild.id,
+                        BotRole.role_id.in_(user_role_ids)
+                    )
+                )
+                if result.scalars().first():
+                    is_exempt = True
+
+        if is_exempt:
+            return # Skip scanning for admins/mods
 
     # Check for banned words
     async with bot.session_maker() as session:

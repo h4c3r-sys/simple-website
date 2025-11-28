@@ -51,3 +51,16 @@ class StoredMessage(Base):
     # Flags to help training
     is_spam = Column(Boolean, nullable=True) # Null = unknown, True = spam, False = ham
     has_link = Column(Boolean, default=False)
+
+class BotRole(Base):
+    """
+    Stores roles that have elevated permissions within the bot.
+    role_type: 'admin' (can config bot) or 'mod' (exempt from bans).
+    """
+    __tablename__ = "bot_roles"
+    __table_args__ = (UniqueConstraint('guild_id', 'role_id', name='_guild_role_uc'),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    guild_id = Column(BigInteger, index=True, nullable=False)
+    role_id = Column(BigInteger, nullable=False)
+    role_type = Column(String, nullable=False) # 'admin' or 'mod'
