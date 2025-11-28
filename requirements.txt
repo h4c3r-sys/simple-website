@@ -1,0 +1,13 @@
+fastapi==0.109.2
+uvicorn==0.27.1
+google-generativeai==0.3.2
+beautifulsoup4==4.12.3
+requests==2.31.0
+pandas==2.2.0
+openpyxl==3.1.2
+imap-tools==1.5.0
+python-multipart==0.0.9
+googlesearch-python==1.2.3
+python-dotenv==1.0.1
+aiofiles==23.2.1
+aiosmtplib==3.0.1
