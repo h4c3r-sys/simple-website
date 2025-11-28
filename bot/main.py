@@ -78,7 +78,7 @@ def capture_debug_logs(filename):
 
     # Create file handler
     file_handler = logging.FileHandler(filename, mode='w', encoding='utf-8')
-    file_handler.setLevel(logging.INFO) # Capture everything at INFO level (SQL queries are usually INFO)
+    file_handler.setLevel(logging.DEBUG) # Capture everything at DEBUG level
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(formatter)
 
@@ -89,6 +89,11 @@ def capture_debug_logs(filename):
     original_sql_level = sql_logger.level
     sql_logger.setLevel(logging.INFO)
 
+    # Set pool logging to debug to see connections
+    pool_logger = logging.getLogger('sqlalchemy.pool')
+    original_pool_level = pool_logger.level
+    pool_logger.setLevel(logging.DEBUG)
+
     try:
         yield
     finally:
@@ -96,6 +101,7 @@ def capture_debug_logs(filename):
         root_logger.removeHandler(file_handler)
         file_handler.close()
         sql_logger.setLevel(original_sql_level)
+        pool_logger.setLevel(original_pool_level)
 
 async def _run_scan_logic(interaction: discord.Interaction, period_value: str):
     """
@@ -261,6 +267,16 @@ class ViolationView(discord.ui.View):
             await interaction.response.send_message("❌ Missing permissions to remove timeout.", ephemeral=True)
 
 # --- COMMANDS ---
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def sync(ctx):
+    """
+    Manually syncs the command tree.
+    Use this if slash commands are not appearing.
+    """
+    await ctx.bot.tree.sync()
+    await ctx.send("✅ Command tree synced.")
 
 @bot.tree.command(name="setup", description="Configure the bot (e.g., log channel)")
 @app_commands.checks.has_permissions(administrator=True)
