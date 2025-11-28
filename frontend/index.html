@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Business Market Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .spinner-border { display: none; }
+        #results-area { white-space: pre-wrap; background: #fff; padding: 20px; border-radius: 5px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1">🚀 AI Market Analyzer</span>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="idea-tab" data-bs-toggle="tab" data-bs-target="#idea" type="button">Generate Idea</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="market-tab" data-bs-toggle="tab" data-bs-target="#market" type="button">Check Market</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="email-tab" data-bs-toggle="tab" data-bs-target="#email" type="button">Email Campaign</button>
+        </li>
+    </ul>
+
+    <div class="tab-content p-4 bg-white border border-top-0" id="myTabContent">
+
+        <!-- Generate Idea Tab -->
+        <div class="tab-pane fade show active" id="idea" role="tabpanel">
+            <h4>Generate Business Idea</h4>
+            <div class="mb-3">
+                <label for="nicheInput" class="form-label">Target Niche / Industry</label>
+                <input type="text" class="form-control" id="nicheInput" placeholder="e.g. Sustainable Fashion, AI for Law">
+            </div>
+            <button class="btn btn-primary" onclick="generateIdea()">Generate</button>
+        </div>
+
+        <!-- Check Market Tab -->
+        <div class="tab-pane fade" id="market" role="tabpanel">
+            <h4>Analyze Market Viability</h4>
+            <div class="mb-3">
+                <label for="ideaInput" class="form-label">Business Idea Description</label>
+                <textarea class="form-control" id="ideaInput" rows="3" placeholder="Describe your idea..."></textarea>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="checkEmail" disabled>
+                <label class="form-check-label" for="checkEmail">Include Email Feedback Analysis (Configure in Email Tab first)</label>
+            </div>
+            <button class="btn btn-success" onclick="analyzeMarket()">Analyze</button>
+        </div>
+
+        <!-- Email Tab -->
+        <div class="tab-pane fade" id="email" role="tabpanel">
+            <h4>Email Campaign Manager</h4>
+            <form id="emailForm">
+                <div class="mb-3">
+                    <label class="form-label">Subject</label>
+                    <input type="text" class="form-control" name="subject" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Body Template</label>
+                    <textarea class="form-control" name="body" rows="4" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Recipients (Excel File)</label>
+                    <input type="file" class="form-control" name="file" accept=".xlsx,.xls">
+                    <div class="form-text">File must have an 'Email' column.</div>
+                </div>
+                <button type="button" class="btn btn-warning" onclick="sendEmail()">Send Campaign</button>
+            </form>
+            <hr>
+            <h5>Check Responses</h5>
+            <div class="input-group">
+                <input type="text" class="form-control" id="responseSubject" placeholder="Subject keyword to search">
+                <button class="btn btn-outline-secondary" onclick="checkResponses()">Check Inbox</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="mt-4" id="resultContainer" style="display:none;">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                Results
+                <div class="spinner-border text-primary" role="status" id="loadingSpinner">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="results-area"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
