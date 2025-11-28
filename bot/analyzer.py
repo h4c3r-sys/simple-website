@@ -211,9 +211,28 @@ class SpamAnalyzer:
 
     def analyze_with_gemini(self, spam_msgs, ham_msgs):
         genai.configure(api_key=self.gemini_key)
-        model = genai.GenerativeModel('gemini-pro')
+        # Switch to gemini-2.0-flash as gemini-pro is deprecated/unavailable
+        # or use gemini-1.5-flash as a safe fallback
+        try:
+            model = genai.GenerativeModel('gemini-2.0-flash')
+        except Exception:
+             logging.warning("gemini-2.0-flash not found, falling back to gemini-1.5-flash")
+             model = genai.GenerativeModel('gemini-1.5-flash')
+
         prompt = self._prepare_llm_prompt(spam_msgs, ham_msgs)
 
-        response = model.generate_content(prompt)
-        content = response.text
-        return [w.strip().lower() for w in content.split(',') if w.strip()]
+        try:
+            response = model.generate_content(prompt)
+            content = response.text
+            return [w.strip().lower() for w in content.split(',') if w.strip()]
+        except Exception as e:
+            # Helpful debug info for user
+            logging.error(f"Gemini generation failed: {e}")
+            logging.info("Attempting to list available models for debugging...")
+            try:
+                for m in genai.list_models():
+                    if 'generateContent' in m.supported_generation_methods:
+                        logging.info(f"Available model: {m.name}")
+            except Exception as list_err:
+                logging.error(f"Could not list models: {list_err}")
+            raise e
