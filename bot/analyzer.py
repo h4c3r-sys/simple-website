@@ -167,6 +167,9 @@ class SpamAnalyzer:
             words_df = words_df[words_df['spam_score'] > 0.01]
             words_df['final_metric'] = words_df['ratio'] * words_df['spam_score']
 
+            # LOGGING FOR DEV COMMAND
+            logging.info(f"Local Analysis Top 5 Candidates:\n{words_df.sort_values(by='final_metric', ascending=False).head(5)[['word', 'ratio', 'spam_score']]}")
+
             return words_df.sort_values(by='final_metric', ascending=False).head(30)['word'].tolist()
         except ValueError as e:
             logging.error(f"Error during vectorization: {e}")
@@ -197,6 +200,8 @@ class SpamAnalyzer:
         client = openai.OpenAI(api_key=self.openai_key)
         prompt = self._prepare_llm_prompt(spam_msgs, ham_msgs)
 
+        logging.info(f"Sending prompt to OpenAI:\n{prompt[:500]}...[truncated]")
+
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -207,6 +212,7 @@ class SpamAnalyzer:
             temperature=0.3
         )
         content = response.choices[0].message.content
+        logging.info(f"OpenAI Response: {content}")
         return [w.strip().lower() for w in content.split(',') if w.strip()]
 
     def analyze_with_gemini(self, spam_msgs, ham_msgs):
@@ -221,9 +227,12 @@ class SpamAnalyzer:
 
         prompt = self._prepare_llm_prompt(spam_msgs, ham_msgs)
 
+        logging.info(f"Sending prompt to Gemini:\n{prompt[:500]}...[truncated]")
+
         try:
             response = model.generate_content(prompt)
             content = response.text
+            logging.info(f"Gemini Response: {content}")
             return [w.strip().lower() for w in content.split(',') if w.strip()]
         except Exception as e:
             # Helpful debug info for user

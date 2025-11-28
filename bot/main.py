@@ -9,9 +9,12 @@ from sqlalchemy.dialects.postgresql import insert
 import pandas as pd
 import datetime
 import logging
+import logging.handlers
 import asyncio
 import os
 import re
+import uuid
+import contextlib
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -64,6 +67,122 @@ async def log_action(guild, session, embed):
         except discord.errors.Forbidden:
             logger.warning(f"Missing permissions to send logs in {channel.name}")
     return None
+
+@contextlib.contextmanager
+def capture_debug_logs(filename):
+    """
+    Context manager that captures all logs (including DB/SQLAlchemy) to a specific file.
+    Used for the /scanlogs command.
+    """
+    root_logger = logging.getLogger()
+
+    # Create file handler
+    file_handler = logging.FileHandler(filename, mode='w', encoding='utf-8')
+    file_handler.setLevel(logging.INFO) # Capture everything at INFO level (SQL queries are usually INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+
+    root_logger.addHandler(file_handler)
+
+    # Enable SQLAlchemy engine logging to see queries
+    sql_logger = logging.getLogger('sqlalchemy.engine')
+    original_sql_level = sql_logger.level
+    sql_logger.setLevel(logging.INFO)
+
+    try:
+        yield
+    finally:
+        # Cleanup
+        root_logger.removeHandler(file_handler)
+        file_handler.close()
+        sql_logger.setLevel(original_sql_level)
+
+async def _run_scan_logic(interaction: discord.Interaction, period_value: str):
+    """
+    Shared logic for /scan and /scanlogs.
+    Fetches messages, saves to DB, analyzes them, and sends results to the user.
+    """
+    # Calculate cutoff date based on user selection
+    now = datetime.datetime.now(datetime.timezone.utc)
+    cutoff = None
+    if period_value != "all":
+        days = int(period_value[:-1])
+        cutoff = now - datetime.timedelta(days=days)
+
+    logger.info(f"Starting scan for guild {interaction.guild.name} ({interaction.guild.id}) - Period: {period_value}")
+
+    # Fetch messages
+    scanned_count = 0
+    messages_data = []
+
+    async with bot.session_maker() as session:
+        for channel in interaction.guild.text_channels:
+            try:
+                limit = 10000
+                if period_value == "all":
+                    limit = 20000
+
+                async for msg in channel.history(limit=limit, after=cutoff):
+                    if msg.content:
+                        # Save to DB for future training/history
+                        stmt = insert(StoredMessage).values(
+                            message_id=msg.id,
+                            guild_id=interaction.guild_id,
+                            channel_id=msg.channel.id,
+                            author_id=msg.author.id,
+                            content=msg.content,
+                            created_at=msg.created_at,
+                            is_bot=msg.author.bot
+                        ).on_conflict_do_nothing()
+                        await session.execute(stmt)
+
+                        messages_data.append({
+                            'content': msg.content,
+                            'is_bot': msg.author.bot,
+                            'author_id': msg.author.id
+                        })
+                        scanned_count += 1
+            except discord.Forbidden:
+                continue
+            except Exception as e:
+                logger.error(f"Error scanning channel {channel.name}: {e}")
+
+        await session.commit()
+
+    if not messages_data:
+        await interaction.followup.send("⚠️ No messages found in the specified period.")
+        return
+
+    # Run Analysis
+    df = pd.DataFrame(messages_data)
+    analyzer = SpamAnalyzer()
+
+    # Run analysis in a thread executor to avoid blocking the main Discord event loop
+    loop = asyncio.get_running_loop()
+    suggested_words = await loop.run_in_executor(None, analyzer.analyze_and_suggest_bans, df)
+
+    if not suggested_words:
+        await interaction.followup.send(f"✅ Scan complete ({scanned_count} messages). No obvious spam patterns found.")
+        return
+
+    # Present Results
+    embed = discord.Embed(title="🛡️ Scan Results: Proposed Banned Words", color=discord.Color.orange())
+    embed.description = "The following words were identified as potential spam keywords based on statistical analysis.\n\n" + \
+                        ", ".join([f"`{w}`" for w in suggested_words])
+
+    view = ApprovalView(suggested_words, bot.session_maker)
+
+    # Send to console channel if exists, else followup
+    async with bot.session_maker() as session:
+        log_chan = await get_log_channel(interaction.guild, session)
+
+    if log_chan:
+        await log_chan.send(embed=embed, view=view)
+        # Only send the text confirmation to the interaction context, the view goes to log channel
+        await interaction.followup.send(f"✅ Scan complete. Results sent to {log_chan.mention}.")
+    else:
+        await interaction.followup.send(embed=embed, view=view)
+
 
 # --- VIEWS ---
 
@@ -178,11 +297,7 @@ async def safetest(interaction: discord.Interaction, target_test_server_id: str 
     # Prioritize Argument > Env Variable
     target_id_str = target_test_server_id
     if not target_id_str:
-        # Renamed variable concept to SAFETEST_TARGET_GUILD_ID in logic,
-        # but sticking to previous step's variable name (SOURCE_GUILD_ID) would be confusing.
-        # However, user previously asked for 'safetest server to work with'.
-        # I'll stick to the variable I added to .env, but treat it as the "Target" now based on new logic.
-        target_id_str = os.getenv("SAFETEST_SOURCE_GUILD_ID") # Reusing var for target to avoid re-editing .env unless critical
+        target_id_str = os.getenv("SAFETEST_SOURCE_GUILD_ID") # Reusing var for target
 
     if not target_id_str:
         await interaction.followup.send("❌ No target server specified. Please provide an ID or set SAFETEST_SOURCE_GUILD_ID in .env")
@@ -219,7 +334,6 @@ async def safetest(interaction: discord.Interaction, target_test_server_id: str 
         target_channel_name = channel.name
 
         # We need to find if channel exists in target.
-        # fetch_guild doesn't cache channels, so we might need fetch_channels
         try:
             target_channels = await target_guild.fetch_channels()
         except Exception as e:
@@ -239,7 +353,6 @@ async def safetest(interaction: discord.Interaction, target_test_server_id: str 
         # 2. Create Webhook in destination channel
         webhook = None
         try:
-            # We need to ensure dest_channel is a TextChannel object we can manipulate
             if isinstance(dest_channel, (discord.CategoryChannel, discord.ForumChannel)):
                 continue
 
@@ -293,88 +406,45 @@ async def scan(interaction: discord.Interaction, period: app_commands.Choice[str
     Scans the channel history for messages, saves them to DB, and triggers the SpamAnalyzer.
     """
     await interaction.response.defer(thinking=True)
+    await _run_scan_logic(interaction, period.value)
 
-    # Calculate cutoff date based on user selection
-    now = datetime.datetime.now(datetime.timezone.utc)
-    cutoff = None
-    if period.value != "all":
-        days = int(period.value[:-1])
-        cutoff = now - datetime.timedelta(days=days)
+@bot.tree.command(name="scanlogs", description="Scan messages AND capture full debug logs (DB/API connections) to a file.")
+@app_commands.describe(period="Time period to scan")
+@app_commands.choices(period=[
+    app_commands.Choice(name="Last Day", value="1d"),
+    app_commands.Choice(name="Last Week", value="7d"),
+    app_commands.Choice(name="Last Month", value="30d"),
+    app_commands.Choice(name="Last Year", value="365d"),
+    app_commands.Choice(name="All Time", value="all"),
+])
+@app_commands.checks.has_permissions(administrator=True)
+async def scanlogs(interaction: discord.Interaction, period: app_commands.Choice[str]):
+    """
+    Run a scan and return a downloadable log file containing all DB queries and API interactions.
+    """
+    await interaction.response.defer(thinking=True)
 
-    logger.info(f"Starting scan for guild {interaction.guild.name} ({interaction.guild.id}) - Period: {period.name}")
+    filename = f"scan_debug_{uuid.uuid4().hex[:8]}.log"
 
-    # Fetch messages
-    scanned_count = 0
-    messages_data = []
+    # Run the scan logic inside the logging context
+    try:
+        with capture_debug_logs(filename):
+            await _run_scan_logic(interaction, period.value)
+    except Exception as e:
+        logger.error(f"Error during scanlogs: {e}")
+        await interaction.followup.send(f"❌ Error occurred: {e}")
 
-    async with bot.session_maker() as session:
-        for channel in interaction.guild.text_channels:
-            try:
-                # We fetch history. Note: This can be slow.
-                # We set a high safety cap to avoid hanging on massive channels.
-                limit = 10000
-                if period.value == "all":
-                    limit = 20000
-
-                async for msg in channel.history(limit=limit, after=cutoff):
-                    if msg.content:
-                        # Save to DB for future training/history
-                        stmt = insert(StoredMessage).values(
-                            message_id=msg.id,
-                            guild_id=interaction.guild_id,
-                            channel_id=msg.channel.id,
-                            author_id=msg.author.id,
-                            content=msg.content,
-                            created_at=msg.created_at,
-                            is_bot=msg.author.bot
-                        ).on_conflict_do_nothing()
-                        await session.execute(stmt)
-
-                        messages_data.append({
-                            'content': msg.content,
-                            'is_bot': msg.author.bot,
-                            'author_id': msg.author.id
-                        })
-                        scanned_count += 1
-            except discord.Forbidden:
-                continue
-            except Exception as e:
-                logger.error(f"Error scanning channel {channel.name}: {e}")
-
-        await session.commit()
-
-    if not messages_data:
-        await interaction.followup.send("⚠️ No messages found in the specified period.")
-        return
-
-    # Run Analysis
-    df = pd.DataFrame(messages_data)
-    analyzer = SpamAnalyzer()
-
-    # Run analysis in a thread executor to avoid blocking the main Discord event loop
-    loop = asyncio.get_running_loop()
-    suggested_words = await loop.run_in_executor(None, analyzer.analyze_and_suggest_bans, df)
-
-    if not suggested_words:
-        await interaction.followup.send(f"✅ Scan complete ({scanned_count} messages). No obvious spam patterns found.")
-        return
-
-    # Present Results
-    embed = discord.Embed(title="🛡️ Scan Results: Proposed Banned Words", color=discord.Color.orange())
-    embed.description = "The following words were identified as potential spam keywords based on statistical analysis.\n\n" + \
-                        ", ".join([f"`{w}`" for w in suggested_words])
-
-    view = ApprovalView(suggested_words, bot.session_maker)
-
-    # Send to console channel if exists, else followup
-    async with bot.session_maker() as session:
-        log_chan = await get_log_channel(interaction.guild, session)
-
-    if log_chan:
-        await log_chan.send(embed=embed, view=view)
-        await interaction.followup.send(f"✅ Scan complete. Results sent to {log_chan.mention}.")
+    # Upload the file
+    if os.path.exists(filename):
+        try:
+            await interaction.followup.send(
+                content="📄 **Full Debug Log:** Contains DB queries and API interactions.",
+                file=discord.File(filename)
+            )
+        finally:
+            os.remove(filename) # Clean up
     else:
-        await interaction.followup.send(embed=embed, view=view)
+        await interaction.followup.send("⚠️ Log file was not generated.")
 
 # --- EVENTS ---
 
