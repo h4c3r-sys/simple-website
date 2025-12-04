@@ -25,7 +25,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/scanlogs [period]`: Runs a scan and generates a downloadable debug log file (capturing SQL queries and API responses).
 - `/setup [channel]`: Configures the logging channel for the server.
 - `/role [add/remove]`: Manages bot permissions (Admin/Mod roles).
+- `/banlist`: Displays the indexed list of banned words.
+- `/banword [add/remove]`: Manually adds or removes words (supports removing by index from `/banlist`).
 - `!sync`: Text command to force-sync slash commands globally.
+
+#### New Features (v1.1.0)
+- **Deep Scan Mode:** Added optional `deepscan` parameter to `/scan` and `/scanlogs`.
+    - Enables usage of **GPT-4o** (OpenAI) and **Gemini 1.5 Pro** (Google) for higher-intelligence analysis when API keys are present.
+    - Standard scan continues to use cost-effective models (GPT-3.5/Gemini Flash).
+- **Manual Ban Management:** Added `/banlist` and `/banword` commands for simple manual list curation.
 
 #### Access Control (RBAC)
 - **Role Management:**

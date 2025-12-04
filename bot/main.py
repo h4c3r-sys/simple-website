@@ -165,7 +165,7 @@ def is_bot_admin():
         return False
     return app_commands.check(predicate)
 
-async def _run_scan_logic(interaction: discord.Interaction, period_value: str):
+async def _run_scan_logic(interaction: discord.Interaction, period_value: str, deepscan: bool):
     """
     Shared logic for /scan and /scanlogs.
     Fetches messages, saves to DB, analyzes them, and sends results to the user.
@@ -177,7 +177,7 @@ async def _run_scan_logic(interaction: discord.Interaction, period_value: str):
         days = int(period_value[:-1])
         cutoff = now - datetime.timedelta(days=days)
 
-    logger.info(f"Starting scan for guild {interaction.guild.name} ({interaction.guild.id}) - Period: {period_value}")
+    logger.info(f"Starting scan for guild {interaction.guild.name} ({interaction.guild.id}) - Period: {period_value} - Deepscan: {deepscan}")
 
     # Fetch messages
     scanned_count = 0
@@ -227,7 +227,10 @@ async def _run_scan_logic(interaction: discord.Interaction, period_value: str):
 
     # Run analysis in a thread executor to avoid blocking the main Discord event loop
     loop = asyncio.get_running_loop()
-    suggested_words = await loop.run_in_executor(None, analyzer.analyze_and_suggest_bans, df)
+    # Partial function application to pass deepscan arg
+    import functools
+    analyze_func = functools.partial(analyzer.analyze_and_suggest_bans, df, deepscan=deepscan)
+    suggested_words = await loop.run_in_executor(None, analyze_func)
 
     if not suggested_words:
         await interaction.followup.send(f"✅ Scan complete ({scanned_count} messages). No obvious spam patterns found.")
@@ -383,6 +386,85 @@ async def manage_role(interaction: discord.Interaction, action: app_commands.Cho
             await session.commit()
             await interaction.response.send_message(f"✅ Removed {role.mention} from bot roles.", ephemeral=True)
 
+@bot.tree.command(name="banlist", description="List currently banned words")
+@is_bot_admin()
+async def banlist(interaction: discord.Interaction):
+    """
+    Displays the list of banned words for this server.
+    """
+    async with bot.session_maker() as session:
+        result = await session.execute(select(BannedWord).where(BannedWord.guild_id == interaction.guild_id).order_by(BannedWord.word))
+        banned_words = result.scalars().all()
+
+    if not banned_words:
+        await interaction.response.send_message("🛡️ No words are currently banned.", ephemeral=True)
+        return
+
+    # Pagination logic (simple)
+    chunk_size = 20
+    chunks = [banned_words[i:i + chunk_size] for i in range(0, len(banned_words), chunk_size)]
+
+    embeds = []
+    for i, chunk in enumerate(chunks):
+        description_lines = []
+        for j, bw in enumerate(chunk):
+            index = (i * chunk_size) + j + 1
+            description_lines.append(f"**{index}.** {bw.word}")
+
+        embed = discord.Embed(title=f"🚫 Banned Words List (Page {i+1}/{len(chunks)})", color=discord.Color.red())
+        embed.description = "\n".join(description_lines)
+        embeds.append(embed)
+
+    await interaction.response.send_message(embed=embeds[0], ephemeral=True)
+    if len(embeds) > 1:
+        await interaction.followup.send(f"⚠️ List truncated. Total words: {len(banned_words)}.", ephemeral=True)
+
+@bot.tree.command(name="banword", description="Add or remove a banned word")
+@app_commands.describe(action="Add or Remove", word="The word (or index number for remove)")
+@app_commands.choices(action=[
+    app_commands.Choice(name="Add", value="add"),
+    app_commands.Choice(name="Remove", value="remove")
+])
+@is_bot_admin()
+async def banword(interaction: discord.Interaction, action: app_commands.Choice[str], word: str):
+    """
+    Manually add or remove a banned word.
+    Remove supports index number from /banlist.
+    """
+    word_clean = word.strip().lower()
+
+    async with bot.session_maker() as session:
+        if action.value == "add":
+            stmt = insert(BannedWord).values(guild_id=interaction.guild_id, word=word_clean).on_conflict_do_nothing()
+            await session.execute(stmt)
+            await session.commit()
+            await interaction.response.send_message(f"✅ Added `{word_clean}` to banned words.", ephemeral=True)
+
+        else: # REMOVE
+            # Check if input is an index (integer)
+            if word_clean.isdigit():
+                index = int(word_clean)
+                # We need to fetch the list in the SAME order as /banlist to find the index
+                result = await session.execute(select(BannedWord).where(BannedWord.guild_id == interaction.guild_id).order_by(BannedWord.word))
+                all_words = result.scalars().all()
+
+                if 1 <= index <= len(all_words):
+                    target_word = all_words[index - 1]
+                    await session.delete(target_word)
+                    await session.commit()
+                    await interaction.response.send_message(f"✅ Removed word at index {index}: `{target_word.word}`", ephemeral=True)
+                else:
+                    await interaction.response.send_message(f"❌ Invalid index. Please check `/banlist`.", ephemeral=True)
+            else:
+                # Remove by string
+                result = await session.execute(delete(BannedWord).where(BannedWord.guild_id == interaction.guild_id, BannedWord.word == word_clean))
+                await session.commit()
+
+                if result.rowcount > 0:
+                    await interaction.response.send_message(f"✅ Removed `{word_clean}` from banned words.", ephemeral=True)
+                else:
+                    await interaction.response.send_message(f"❌ Word `{word_clean}` not found in list.", ephemeral=True)
+
 @bot.tree.command(name="setup", description="Configure the bot (e.g., log channel)")
 @is_bot_admin()
 async def setup(interaction: discord.Interaction, log_channel: discord.TextChannel = None):
@@ -513,7 +595,7 @@ async def safetest(interaction: discord.Interaction, target_test_server_id: str 
     await interaction.channel.send(f"✅ Safe Test Clone Complete! Copied {count} messages to **{target_guild.name}**.")
 
 @bot.tree.command(name="scan", description="Scan messages to identify scam keywords")
-@app_commands.describe(period="Time period to scan")
+@app_commands.describe(period="Time period to scan", deepscan="Use powerful AI models (GPT-4o/Gemini Pro) - Slower/More Expensive")
 @app_commands.choices(period=[
     app_commands.Choice(name="Last Day", value="1d"),
     app_commands.Choice(name="Last Week", value="7d"),
@@ -522,15 +604,15 @@ async def safetest(interaction: discord.Interaction, target_test_server_id: str 
     app_commands.Choice(name="All Time", value="all"),
 ])
 @is_bot_admin()
-async def scan(interaction: discord.Interaction, period: app_commands.Choice[str]):
+async def scan(interaction: discord.Interaction, period: app_commands.Choice[str], deepscan: bool = False):
     """
     Scans the channel history for messages, saves them to DB, and triggers the SpamAnalyzer.
     """
     await interaction.response.defer(thinking=True)
-    await _run_scan_logic(interaction, period.value)
+    await _run_scan_logic(interaction, period.value, deepscan=deepscan)
 
 @bot.tree.command(name="scanlogs", description="Scan messages AND capture full debug logs (DB/API connections) to a file.")
-@app_commands.describe(period="Time period to scan")
+@app_commands.describe(period="Time period to scan", deepscan="Use powerful AI models (GPT-4o/Gemini Pro)")
 @app_commands.choices(period=[
     app_commands.Choice(name="Last Day", value="1d"),
     app_commands.Choice(name="Last Week", value="7d"),
@@ -539,7 +621,7 @@ async def scan(interaction: discord.Interaction, period: app_commands.Choice[str
     app_commands.Choice(name="All Time", value="all"),
 ])
 @is_bot_admin()
-async def scanlogs(interaction: discord.Interaction, period: app_commands.Choice[str]):
+async def scanlogs(interaction: discord.Interaction, period: app_commands.Choice[str], deepscan: bool = False):
     """
     Run a scan and return a downloadable log file containing all DB queries and API interactions.
     """
@@ -550,7 +632,7 @@ async def scanlogs(interaction: discord.Interaction, period: app_commands.Choice
     # Run the scan logic inside the logging context
     try:
         with capture_debug_logs(filename):
-            await _run_scan_logic(interaction, period.value)
+            await _run_scan_logic(interaction, period.value, deepscan=deepscan)
     except Exception as e:
         logger.error(f"Error during scanlogs: {e}")
         await interaction.followup.send(f"❌ Error occurred: {e}")

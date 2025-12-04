@@ -44,7 +44,7 @@ class SpamAnalyzer:
         text = " ".join(text.split())
         return text
 
-    def analyze_and_suggest_bans(self, messages_df):
+    def analyze_and_suggest_bans(self, messages_df, deepscan=False):
         """
         Analyzes a DataFrame of messages and returns a list of suggested ban words.
 
@@ -57,7 +57,7 @@ class SpamAnalyzer:
         if messages_df.empty:
             return []
 
-        logging.info(f"Starting analysis on {len(messages_df)} messages.")
+        logging.info(f"Starting analysis on {len(messages_df)} messages. Deepscan: {deepscan}")
 
         # 1. Preprocess
         messages_df['clean_text'] = messages_df['content'].apply(self.preprocess)
@@ -108,14 +108,14 @@ class SpamAnalyzer:
         if self.openai_key:
             logging.info("Using OpenAI for analysis.")
             try:
-                return self.analyze_with_openai(spam_msgs, ham_msgs)
+                return self.analyze_with_openai(spam_msgs, ham_msgs, deepscan)
             except Exception as e:
                 logging.error(f"OpenAI analysis failed: {e}. Falling back to local.")
 
         if self.gemini_key:
             logging.info("Using Gemini for analysis.")
             try:
-                return self.analyze_with_gemini(spam_msgs, ham_msgs)
+                return self.analyze_with_gemini(spam_msgs, ham_msgs, deepscan)
             except Exception as e:
                 logging.error(f"Gemini analysis failed: {e}. Falling back to local.")
 
@@ -196,14 +196,15 @@ class SpamAnalyzer:
         )
         return prompt
 
-    def analyze_with_openai(self, spam_msgs, ham_msgs):
+    def analyze_with_openai(self, spam_msgs, ham_msgs, deepscan=False):
         client = openai.OpenAI(api_key=self.openai_key)
         prompt = self._prepare_llm_prompt(spam_msgs, ham_msgs)
 
-        logging.info(f"Sending prompt to OpenAI:\n{prompt[:500]}...[truncated]")
+        model_name = "gpt-4o" if deepscan else "gpt-3.5-turbo"
+        logging.info(f"Sending prompt to OpenAI (Model: {model_name}):\n{prompt[:500]}...[truncated]")
 
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=model_name,
             messages=[
                 {"role": "system", "content": "You are a helpful data analyst bot."},
                 {"role": "user", "content": prompt}
@@ -215,19 +216,21 @@ class SpamAnalyzer:
         logging.info(f"OpenAI Response: {content}")
         return [w.strip().lower() for w in content.split(',') if w.strip()]
 
-    def analyze_with_gemini(self, spam_msgs, ham_msgs):
+    def analyze_with_gemini(self, spam_msgs, ham_msgs, deepscan=False):
         genai.configure(api_key=self.gemini_key)
-        # Switch to gemini-2.0-flash as gemini-pro is deprecated/unavailable
-        # or use gemini-1.5-flash as a safe fallback
+
+        target_model = 'gemini-1.5-pro' if deepscan else 'gemini-2.0-flash'
+
+        # Try prioritized model with fallbacks
         try:
-            model = genai.GenerativeModel('gemini-2.0-flash')
+            model = genai.GenerativeModel(target_model)
         except Exception:
-             logging.warning("gemini-2.0-flash not found, falling back to gemini-1.5-flash")
+             logging.warning(f"{target_model} not found, falling back.")
              model = genai.GenerativeModel('gemini-1.5-flash')
 
         prompt = self._prepare_llm_prompt(spam_msgs, ham_msgs)
 
-        logging.info(f"Sending prompt to Gemini:\n{prompt[:500]}...[truncated]")
+        logging.info(f"Sending prompt to Gemini (Model Target: {target_model}):\n{prompt[:500]}...[truncated]")
 
         try:
             response = model.generate_content(prompt)
