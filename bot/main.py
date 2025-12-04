@@ -43,6 +43,16 @@ class ScamBlockerBot(commands.Bot):
         await self.tree.sync()
         logger.info("Commands synced.")
 
+        # Add error handler to tree
+        self.tree.on_error = self.on_tree_error
+
+    async def on_tree_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+        if isinstance(error, app_commands.CheckFailure):
+            await interaction.response.send_message("❌ You do not have permission to run this command. (Ensure you are a Bot Admin or have the correct Role)", ephemeral=True)
+        else:
+            logger.error(f"Command error: {error}")
+            await interaction.response.send_message("❌ An unexpected error occurred.", ephemeral=True)
+
 bot = ScamBlockerBot()
 
 # --- UTILS ---
@@ -107,15 +117,24 @@ async def check_permissions(interaction: discord.Interaction, required_level: st
     """
     Checks if user has permission to run a command.
     Hierarchy:
-    1. Guild Owner -> Allowed
-    2. Discord Administrator Permission -> Allowed (for admin level)
-    3. DB Role (BotRole) -> Allowed if matches level
-    4. Keyword in Role Name ("admin", "mod", etc.) -> Allowed
+    1. DEV_USER_ID Env Var -> Allowed
+    2. Guild Owner -> Allowed
+    3. Discord Administrator Permission -> Allowed (for admin level)
+    4. DB Role (BotRole) -> Allowed if matches level
+    5. Keyword in Role Name ("admin", "mod", etc.) -> Allowed
     """
     user = interaction.user
+
+    # 1. Dev Bypass
+    dev_id = os.getenv("DEV_USER_ID")
+    if dev_id and str(user.id) == str(dev_id):
+        return True
+
+    # 2. Guild Owner
     if user.id == interaction.guild.owner_id:
         return True
 
+    # 3. Discord Admin Perms
     if required_level == 'admin' and user.guild_permissions.administrator:
         return True
 
@@ -129,7 +148,7 @@ async def check_permissions(interaction: discord.Interaction, required_level: st
     if required_level == 'mod':
         mod_keywords.update(admin_keywords) # Admins are also mods
 
-    # Check keywords
+    # 5. Check keywords
     for name in user_role_names:
         if required_level == 'admin':
             if any(k in name for k in admin_keywords):
@@ -138,7 +157,7 @@ async def check_permissions(interaction: discord.Interaction, required_level: st
             if any(k in name for k in mod_keywords):
                 return True
 
-    # Check DB
+    # 4. Check DB
     async with bot.session_maker() as session:
         result = await session.execute(
             select(BotRole).where(
@@ -159,10 +178,8 @@ async def check_permissions(interaction: discord.Interaction, required_level: st
 # Custom check decorator
 def is_bot_admin():
     async def predicate(interaction: discord.Interaction):
-        if await check_permissions(interaction, 'admin'):
-            return True
-        await interaction.response.send_message("❌ You do not have permission to run this command.", ephemeral=True)
-        return False
+        # Note: We rely on on_tree_error to handle the False return (CheckFailure)
+        return await check_permissions(interaction, 'admin')
     return app_commands.check(predicate)
 
 async def _run_scan_logic(interaction: discord.Interaction, period_value: str, deepscan: bool):

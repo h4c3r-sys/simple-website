@@ -8,6 +8,7 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - SAFETEST_SOURCE_GUILD_ID=${SAFETEST_SOURCE_GUILD_ID}
+      - DEV_USER_ID=${DEV_USER_ID}
     depends_on:
       - db
     volumes:

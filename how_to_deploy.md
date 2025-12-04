@@ -109,6 +109,9 @@ GEMINI_API_KEY=AIza...
 
 # Optional: Default target server for /safetest
 SAFETEST_SOURCE_GUILD_ID=
+
+# Optional: Master Developer/Owner ID (Bypasses permission checks)
+DEV_USER_ID=
 ```
 
 Press `Ctrl+O`, `Enter` to save, and `Ctrl+X` to exit.
@@ -152,15 +155,32 @@ You should see:
 
 ### Updating the Bot
 
-If you change the code, deploy the updates:
+If you change the code, deploy the updates.
 
-```bash
-# Pull changes (if using git)
-git pull
+**For Debian/Ubuntu VPS users:**
 
-# Rebuild and restart
-docker compose up --build -d
-```
+1.  Navigate to your bot directory:
+    ```bash
+    cd your-repo
+    ```
+
+2.  Pull the latest code (if using Git):
+    ```bash
+    git pull
+    ```
+    *(If you uploaded files manually via SFTP/SCP, skip this step and just upload the new files).*
+
+3.  Rebuild the containers to apply changes:
+    ```bash
+    docker compose down
+    docker compose up --build -d
+    ```
+    *Using `down` first ensures the container is fully stopped before rebuilding.*
+
+4.  Check logs to confirm startup:
+    ```bash
+    ./scripts/view_logs.sh
+    ```
 
 ### Database Backups
 
