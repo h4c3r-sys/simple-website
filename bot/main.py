@@ -47,11 +47,20 @@ class ScamBlockerBot(commands.Bot):
         self.tree.on_error = self.on_tree_error
 
     async def on_tree_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+        # Handle the error, ensuring we don't crash if interaction is already responded to
+        error_msg = "❌ An unexpected error occurred."
         if isinstance(error, app_commands.CheckFailure):
-            await interaction.response.send_message("❌ You do not have permission to run this command. (Ensure you are a Bot Admin or have the correct Role)", ephemeral=True)
+            error_msg = "❌ You do not have permission to run this command. (Ensure you are a Bot Admin or have the correct Role)"
         else:
             logger.error(f"Command error: {error}")
-            await interaction.response.send_message("❌ An unexpected error occurred.", ephemeral=True)
+
+        try:
+            if interaction.response.is_done():
+                await interaction.followup.send(error_msg, ephemeral=True)
+            else:
+                await interaction.response.send_message(error_msg, ephemeral=True)
+        except Exception as e:
+            logger.error(f"Failed to send error response: {e}")
 
 bot = ScamBlockerBot()
 
@@ -265,9 +274,15 @@ async def _run_scan_logic(interaction: discord.Interaction, period_value: str, d
         log_chan = await get_log_channel(interaction.guild, session)
 
     if log_chan:
-        await log_chan.send(embed=embed, view=view)
-        # Only send the text confirmation to the interaction context, the view goes to log channel
-        await interaction.followup.send(f"✅ Scan complete. Results sent to {log_chan.mention}.")
+        try:
+            await log_chan.send(embed=embed, view=view)
+            # Only send the text confirmation to the interaction context, the view goes to log channel
+            await interaction.followup.send(f"✅ Scan complete. Results sent to {log_chan.mention}.")
+        except discord.Forbidden:
+            await interaction.followup.send("⚠️ Scan complete, but I lack permissions to send the report to the configured log channel. Here is the report:", embed=embed, view=view)
+        except Exception as e:
+            logger.error(f"Failed to send log: {e}")
+            await interaction.followup.send("⚠️ Scan complete, but failed to send report to log channel.", embed=embed, view=view)
     else:
         await interaction.followup.send(embed=embed, view=view)
 
@@ -488,12 +503,20 @@ async def setup(interaction: discord.Interaction, log_channel: discord.TextChann
     """
     Sets the channel where violation logs will be sent.
     """
+    target_channel = log_channel or interaction.channel
+
+    # Check permissions first
+    permissions = target_channel.permissions_for(interaction.guild.me)
+    if not permissions.send_messages or not permissions.embed_links:
+        await interaction.response.send_message(f"⚠️ I do not have permission to send messages or embeds in {target_channel.mention}. Please fix permissions and try again.", ephemeral=True)
+        return
+
     async with bot.session_maker() as session:
         # Check if settings exist
         result = await session.execute(select(GuildSettings).where(GuildSettings.guild_id == interaction.guild_id))
         settings = result.scalars().first()
 
-        target_channel_id = log_channel.id if log_channel else interaction.channel_id
+        target_channel_id = target_channel.id
 
         if not settings:
             settings = GuildSettings(guild_id=interaction.guild_id, log_channel_id=target_channel_id)
