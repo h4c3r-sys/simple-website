@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  # Database (ScyllaDB - matching Discord's persistence layer)
+  scylla:
+    image: scylladb/scylla:latest
+    container_name: scylla
+    command: --smp 1 --memory 2G
+    ports:
+      - "9042:9042" # CQL port
+    volumes:
+      - scylla_data:/var/lib/scylla
+    networks:
+      - chat-network
+    restart: unless-stopped
+
+  # Go API (Core REST API for User/Server/Channel management)
+  api:
+    build:
+      context: ./backend/api
+      dockerfile: Dockerfile
+    container_name: go_api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - scylla
+    environment:
+      - SCYLLA_HOST=scylla
+      - JWT_SECRET=${JWT_SECRET:-default_dev_secret}
+    networks:
+      - chat-network
+
+  # Elixir Gateway (WebSocket server for real-time messaging)
+  gateway:
+    build:
+      context: ./backend/gateway
+      dockerfile: Dockerfile
+    container_name: elixir_gateway
+    ports:
+      - "4000:4000"
+    depends_on:
+      - scylla
+      - api
+    environment:
+      - API_URL=http://api:8080
+    networks:
+      - chat-network
+
+  # Rust Encryption Service (Key distribution microservice)
+  encryption:
+    build:
+      context: ./backend/encryption
+      dockerfile: Dockerfile
+    container_name: rust_encryption
+    ports:
+      - "50051:50051" # gRPC or custom protocol
+    networks:
+      - chat-network
+
+  # Python Worker (Background tasks)
+  worker:
+    build:
+      context: ./backend/worker
+      dockerfile: Dockerfile
+    container_name: python_worker
+    depends_on:
+      - scylla
+    environment:
+      - SCYLLA_HOST=scylla
+    networks:
+      - chat-network
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: react_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+      - gateway
+    networks:
+      - chat-network
+
+networks:
+  chat-network:
+    driver: bridge
+
+volumes:
+  scylla_data:
