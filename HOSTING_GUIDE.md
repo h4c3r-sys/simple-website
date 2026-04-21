@@ -1,6 +1,6 @@
-# Hosting and Deployment Guide
+# The Sacred Citadel - Hosting and Deployment Guide
 
-This guide explains how to host your private, highly secure chat application using Docker. It also includes an overview of the advanced encryption algorithms utilized in this application.
+This guide explains how to host The Sacred Citadel, your private, highly secure chat application using Docker. It also includes an overview of the advanced encryption algorithms utilized in this application.
 
 ## 1. Hosting Requirements
 - A server or Virtual Private Server (VPS) running Linux (Ubuntu 22.04 LTS recommended).

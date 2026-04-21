@@ -4,7 +4,7 @@ import App from './App';
 
 test('renders chat app layout elements', () => {
   render(<App />);
-  const serverHeader = screen.getByText(/Private Server/i);
+  const serverHeader = screen.getByText(/The Sacred Citadel/i);
   expect(serverHeader).toBeInTheDocument();
 
   const systemMessage = screen.getByText(/Welcome to your secure chat/i);

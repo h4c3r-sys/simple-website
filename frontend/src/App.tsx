@@ -55,7 +55,9 @@ function App() {
     <div className="discord-app">
       {/* Server Sidebar */}
       <div className="server-sidebar">
-        <div className="server-icon home">D</div>
+        <div className="server-icon home" title="The Sacred Citadel">
+          <img src="/logo.svg" alt="Citadel Logo" style={{ width: '32px', height: '32px' }} />
+        </div>
         <div className="separator"></div>
         {servers.map(server => (
           <div key={server.id} className="server-icon">{server.name.charAt(0)}</div>
@@ -65,7 +67,7 @@ function App() {
       {/* Channel Sidebar */}
       <div className="channel-sidebar">
         <div className="server-header">
-          <h3>Private Server</h3>
+          <h3>The Sacred Citadel</h3>
         </div>
         <div className="channel-list">
           {channels.map(channel => (

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5865F2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2a36b1;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Shield Background -->
+  <path d="M50 5 L10 20 L10 50 C10 75 30 90 50 95 C70 90 90 75 90 50 L90 20 Z" fill="url(#shieldGrad)" />
+  <!-- Citadel Tower -->
+  <path d="M35 70 L35 40 L30 40 L30 30 L40 30 L40 40 L45 40 L45 30 L55 30 L55 40 L60 40 L60 30 L70 30 L70 40 L65 40 L65 70 Z" fill="#ffffff" />
+  <!-- Door -->
+  <path d="M45 70 L45 55 C45 50 55 50 55 55 L55 70 Z" fill="#2a36b1" />
+  <!-- Lock Symbol (Security) -->
+  <circle cx="50" cy="55" r="3" fill="#ffd700" />
+  <rect x="49" y="55" width="2" height="4" fill="#ffd700" />
+</svg>
