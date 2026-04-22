@@ -181,6 +181,42 @@ body {
   display: flex;
   align-items: baseline;
   margin-bottom: 4px;
+  width: 100%;
+}
+
+.message-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.message-container:hover .message-actions {
+  opacity: 1;
+}
+
+.message-actions button {
+  background: none;
+  border: none;
+  color: #949ba4;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.message-actions button:hover {
+  text-decoration: underline;
+}
+
+.add-server {
+  background-color: #313338;
+  color: #23a559;
+  font-size: 24px;
+}
+
+.add-server:hover {
+  background-color: #23a559;
+  color: white;
 }
 
 .author {
@@ -203,17 +239,15 @@ body {
   padding: 0 16px 24px 16px;
 }
 
-.message-input-area input {
-  width: 100%;
-  background-color: #383a40;
-  border: none;
-  border-radius: 8px;
-  padding: 11px 16px;
-  color: #dbdee1;
-  font-size: 1rem;
-  outline: none;
-}
-
 .message-input-area input::placeholder {
   color: #949ba4;
+}
+
+.message-attachment a {
+  color: #00a8fc;
+  text-decoration: none;
+}
+
+.message-attachment a:hover {
+  text-decoration: underline;
 }
