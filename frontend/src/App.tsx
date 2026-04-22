@@ -12,6 +12,12 @@ function App() {
   // DMs State
   const [dms, setDms] = useState([{ id: 'dm1', name: 'Alice (DM)' }]);
   const [activeView, setActiveView] = useState<'server' | 'dm'>('server');
+  const [theme, setTheme] = useState('dark');
+
+  // Apply theme to document element
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   // Simulating fetching state from Go API
   useEffect(() => {
@@ -120,6 +126,8 @@ function App() {
         <div className="server-icon add-server" onClick={handleCreateServer}>+</div>
       </div>
 
+      {/* Main Content Area */}
+      <div className="main-content">
       {/* Channel Sidebar */}
       <div className="channel-sidebar">
         <div className="server-header">
@@ -152,6 +160,14 @@ function App() {
         <div className="chat-header">
           <h3><span className="hash">#</span> general</h3>
           <span className="e2ee-badge">🔒 End-to-End Encrypted</span>
+          <select className="theme-selector" value={theme} onChange={(e) => setTheme(e.target.value)}>
+            <option value="dark">Dark Citadel</option>
+            <option value="light">Light</option>
+            <option value="space">Space</option>
+            <option value="sea">Deep Sea</option>
+            <option value="girly">Girly</option>
+            <option value="kawaii">Kawaii</option>
+          </select>
         </div>
 
         <div className="message-list">
@@ -197,13 +213,13 @@ function App() {
 
         <div className="message-input-area">
           {selectedFile && (
-            <div className="file-preview" style={{ padding: '8px', background: '#2b2d31', borderRadius: '8px 8px 0 0', color: '#dbdee1', fontSize: '14px', borderBottom: '1px solid #1e1f22' }}>
-              📎 {selectedFile.name}
-              <button onClick={() => setSelectedFile(null)} style={{ marginLeft: '8px', background: 'none', border: 'none', color: '#da373c', cursor: 'pointer' }}>✖</button>
+            <div className="file-preview" style={{ padding: '8px 16px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px 8px 0 0', color: 'var(--accent-color)', fontSize: '14px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center' }}>
+              <span style={{ marginRight: '8px' }}>📎</span> {selectedFile.name}
+              <button onClick={() => setSelectedFile(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer', fontWeight: 'bold' }}>✖</button>
             </div>
           )}
-          <form onSubmit={handleSendMessage} style={{ display: 'flex', background: '#383a40', borderRadius: selectedFile ? '0 0 8px 8px' : '8px' }}>
-            <label style={{ padding: '11px 16px', cursor: 'pointer', color: '#b5bac1' }}>
+          <form onSubmit={handleSendMessage} style={{ display: 'flex', backgroundColor: 'var(--input-bg)', borderRadius: selectedFile ? '0 0 8px 8px' : '8px' }}>
+            <label style={{ padding: '16px 20px', cursor: 'pointer', color: 'var(--accent-color)', fontSize: '20px', display: 'flex', alignItems: 'center' }}>
               +
               <input type="file" style={{ display: 'none' }} onChange={handleFileSelect} />
             </label>
@@ -212,10 +228,11 @@ function App() {
               placeholder="Message #general"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              style={{ background: 'transparent', flexGrow: 1, border: 'none', padding: '11px 16px', color: '#dbdee1', outline: 'none' }}
+              style={{ background: 'transparent', flexGrow: 1, border: 'none', padding: '16px 0', color: 'var(--text-main)', outline: 'none', fontSize: '15px' }}
             />
           </form>
         </div>
+      </div>
       </div>
     </div>
   );

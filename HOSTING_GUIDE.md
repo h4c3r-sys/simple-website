@@ -32,17 +32,39 @@ DB_KEYSPACE=discord_clone
 JWT_SECRET=generate_a_very_long_random_string_here
 ```
 
-### Step 4: Run Docker Compose
-Start all microservices and the ScyllaDB database using Docker Compose in detached mode:
+### Step 4: Choose Your Environment
+
+#### Option A: Local Development Mode
+If you are developing or testing locally on your own machine without a domain name:
 ```bash
-docker-compose up -d --build
+docker-compose -f docker-compose.dev.yml up --build
 ```
-This command will pull the required base images, build the Go, Rust, Elixir, Python, and React applications, and network them together securely.
+This will start a hot-reloading React server on port 3000 alongside the backend services.
+
+#### Option B: Production Mode (VPS with Domain & SSL)
+If you are deploying to a live VPS (like DigitalOcean, AWS, Linode) and want a secure `https://` connection:
+
+1. **Configure your Domain:** Point your domain's A-record to your server's IP address.
+2. **Update Nginx Config:** Open `nginx/conf.d/app.conf` and replace `example.com` with your actual domain name.
+3. **Initialize SSL Certificates:** Before starting the main app, you must fetch the Let's Encrypt certificates. Run a dummy Nginx server just to verify the domain:
+   ```bash
+   docker-compose -f docker-compose.prod.yml run --rm --entrypoint "\
+     certbot certonly --webroot -w /var/www/certbot \
+     -d yourdomain.com -d www.yourdomain.com \
+     --email your-email@example.com \
+     --rsa-key-size 4096 \
+     --agree-tos \
+     --force-renewal" certbot
+   ```
+4. **Start Production Services:** Once certificates are acquired, boot the entire stack in detached mode:
+   ```bash
+   docker-compose -f docker-compose.prod.yml up -d --build
+   ```
 
 ### Step 5: Verify Running Services
 Check that all containers are healthy:
 ```bash
-docker-compose ps
+docker-compose -f docker-compose.prod.yml ps
 ```
 
 ---
