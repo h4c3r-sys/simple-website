@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # Database
+  scylla:
+    image: scylladb/scylla:latest
+    container_name: scylla_prod
+    command: --smp 1 --memory 2G
+    volumes:
+      - scylla_data_prod:/var/lib/scylla
+    networks:
+      - chat-prod-network
+    restart: unless-stopped
+
+  # Go API
+  api:
+    build:
+      context: ./backend/api
+    container_name: go_api_prod
+    depends_on:
+      - scylla
+    environment:
+      - SCYLLA_HOST=scylla
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - chat-prod-network
+    restart: unless-stopped
+
+  # Elixir Gateway
+  gateway:
+    build:
+      context: ./backend/gateway
+    container_name: elixir_gateway_prod
+    depends_on:
+      - scylla
+      - api
+    environment:
+      - API_URL=http://api:8080
+    networks:
+      - chat-prod-network
+    restart: unless-stopped
+
+  # React Frontend (Static Build)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: react_frontend_prod
+    networks:
+      - chat-prod-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy with SSL (Certbot)
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - frontend
+      - api
+      - gateway
+    networks:
+      - chat-prod-network
+    restart: unless-stopped
+
+  # Certbot for SSL Certificate Renewal
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - chat-prod-network
+
+networks:
+  chat-prod-network:
+    driver: bridge
+
+volumes:
+  scylla_data_prod:
