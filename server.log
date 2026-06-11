@@ -1,0 +1,60 @@
+⨯ Failed to start server
+Error: listen EADDRINUSE: address already in use 0.0.0.0:3001
+    at <unknown> (Error[next-auth][warn][NEXTAUTH_URL]
+https://next-auth.js.org/warnings#nextauth_url
+prisma:query SELECT `main`.`Settings`.`id`, `main`.`Settings`.`theme`, `main`.`Settings`.`updatedAt` FROM `main`.`Settings` WHERE (`main`.`Settings`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
+prisma:query SELECT `main`.`Thread`.`id`, `main`.`Thread`.`title`, `main`.`Thread`.`content`, `main`.`Thread`.`authorId`, `main`.`Thread`.`createdAt`, `main`.`Thread`.`updatedAt`, `main`.`Thread`.`views`, COALESCE(`aggr_selection_0_Post`.`_aggr_count_posts`, 0) AS `_aggr_count_posts` FROM `main`.`Thread` LEFT JOIN (SELECT `main`.`Post`.`threadId`, COUNT(*) AS `_aggr_count_posts` FROM `main`.`Post` WHERE 1=1 GROUP BY `main`.`Post`.`threadId`) AS `aggr_selection_0_Post` ON (`main`.`Thread`.`id` = `aggr_selection_0_Post`.`threadId`) WHERE 1=1 ORDER BY `main`.`Thread`.`updatedAt` DESC LIMIT ? OFFSET ?
+prisma:query SELECT `main`.`Settings`.`id`, `main`.`Settings`.`theme`, `main`.`Settings`.`updatedAt` FROM `main`.`Settings` WHERE (`main`.`Settings`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
+prisma:query SELECT 1
+prisma:query SELECT `main`.`Thread`.`id`, `main`.`Thread`.`title`, `main`.`Thread`.`content`, `main`.`Thread`.`authorId`, `main`.`Thread`.`createdAt`, `main`.`Thread`.`updatedAt`, `main`.`Thread`.`views`, COALESCE(`aggr_selection_0_Post`.`_aggr_count_posts`, 0) AS `_aggr_count_posts` FROM `main`.`Thread` LEFT JOIN (SELECT `main`.`Post`.`threadId`, COUNT(*) AS `_aggr_count_posts` FROM `main`.`Post` WHERE 1=1 GROUP BY `main`.`Post`.`threadId`) AS `aggr_selection_0_Post` ON (`main`.`Thread`.`id` = `aggr_selection_0_Post`.`threadId`) WHERE 1=1 ORDER BY `main`.`Thread`.`updatedAt` DESC LIMIT ? OFFSET ?
+prisma:query SELECT `main`.`Settings`.`id`, `main`.`Settings`.`theme`, `main`.`Settings`.`updatedAt` FROM `main`.`Settings` WHERE (`main`.`Settings`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
+prisma:query SELECT `main`.`Settings`.`id`, `main`.`Settings`.`theme`, `main`.`Settings`.`updatedAt` FROM `main`.`Settings` WHERE (`main`.`Settings`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
+P BY `main`.`Post`.`threadId`) AS `aggr_selection_0_Post` ON (`main`.`Thread`.`id` = `aggr_selection_0_Post`.`threadId`) WHERE 1=1 ORDER BY `main`.`Thread`.`updatedAt` DESC LIMIT ? OFFSET ?
+prisma:query SELECT `main`.`Settings`.`id`, `main`.`Settings`.`theme`, `main`.`Settings`.`updatedAt` FROM `main`.`Settings` WHERE (`main`.`Settings`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
+⨯ Error [PrismaClientKnownRequestError]:
+Invalid `prisma.thread.findMany()` invocation:
+
+
+The table `main.Thread` does not exist in the current database.
+    at async f (.next/server/chunks/ssr/[root-of-the-server]__1t0iyxk._.js:1:9903) {
+  code: 'P2021',
+  clientVersion: '5.22.0',
+  meta: { modelName: 'Thread', table: 'main.Thread' },
+  digest: '3083248779'
+}
+⨯ Error [PrismaClientKnownRequestError]:
+Invalid `prisma.settings.findUnique()` invocation:
+
+
+The table `main.Settings` does not exist in the current database.
+    at async g (.next/server/chunks/ssr/[root-of-the-server]__1s7yz6e._.js:1:3473) {
+  code: 'P2021',
+  clientVersion: '5.22.0',
+  meta: { modelName: 'Settings', table: 'main.Settings' },
+  digest: '2265545209'
+}
+prisma:query SELECT 1
+prisma:query SELECT `main`.`Thread`.`id`, `main`.`Thread`.`title`, `main`.`Thread`.`content`, `main`.`Thread`.`authorId`, `main`.`Thread`.`createdAt`, `main`.`Thread`.`updatedAt`, `main`.`Thread`.`views`, COALESCE(`aggr_selection_0_Post`.`_aggr_count_posts`, 0) AS `_aggr_count_posts` FROM `main`.`Thread` LEFT JOIN (SELECT `main`.`Post`.`threadId`, COUNT(*) AS `_aggr_count_posts` FROM `main`.`Post` WHERE 1=1 GROUP BY `main`.`Post`.`threadId`) AS `aggr_selection_0_Post` ON (`main`.`Thread`.`id` = `aggr_selection_0_Post`.`threadId`) WHERE 1=1 ORDER BY `main`.`Thread`.`updatedAt` DESC LIMIT ? OFFSET ?
+prisma:query SELECT `main`.`Settings`.`id`, `main`.`Settings`.`theme`, `main`.`Settings`.`updatedAt` FROM `main`.`Settings` WHERE (`main`.`Settings`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
+⨯ Error [PrismaClientKnownRequestError]:
+Invalid `prisma.thread.findMany()` invocation:
+
+
+The table `main.Thread` does not exist in the current database.
+    at async f (.next/server/chunks/ssr/[root-of-the-server]__1t0iyxk._.js:1:9903) {
+  code: 'P2021',
+  clientVersion: '5.22.0',
+  meta: { modelName: 'Thread', table: 'main.Thread' },
+  digest: '3083248779'
+}
+⨯ Error [PrismaClientKnownRequestError]:
+Invalid `prisma.settings.findUnique()` invocation:
+
+
+The table `main.Settings` does not exist in the current database.
+    at async g (.next/server/chunks/ssr/[root-of-the-server]__1s7yz6e._.js:1:3473) {
+  code: 'P2021',
+  clientVersion: '5.22.0',
+  meta: { modelName: 'Settings', table: 'main.Settings' },
+  digest: '2265545209'
+}

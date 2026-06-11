@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  citadel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sacred-citadel-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=fallback-secret-key-change-in-prod
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-dummy_key}
+    volumes:
+      - ./prisma/dev.db:/app/prisma/dev.db
+    restart: unless-stopped

@@ -1,0 +1,238 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+:root {
+  /* Default to a generic variable set; the real themes will be defined via data-theme */
+  --background: #ffffff;
+  --foreground: #171717;
+  --primary: #0055ff;
+  --primary-foreground: #ffffff;
+  --border: #cccccc;
+  --radius: 0.5rem;
+}
+
+[data-theme="classic-blue"] {
+  --background: #e9eef5;
+  --foreground: #222222;
+  --card: #f5f5ff;
+  --card-foreground: #333333;
+  --primary: #0044aa;
+  --primary-foreground: #ffffff;
+  --secondary: #d1d9e5;
+  --secondary-foreground: #111111;
+  --border: #a1b2c8;
+  --muted: #e1e7f0;
+  --muted-foreground: #555555;
+  --radius: 0.25rem;
+
+  --forum-header-bg: linear-gradient(to bottom, #1e5799 0%,#2989d8 50%,#207cca 51%,#7db9e8 100%);
+  --forum-header-color: white;
+  --forum-panel-border: 1px solid #7ba7d5;
+  --user-block-bg: linear-gradient(to right, #e1eaf3, #f0f4f9);
+  --post-bg: #f9f9f9;
+}
+
+[data-theme="retro-so"] {
+  --background: #ffffff;
+  --foreground: #242729;
+  --card: #ffffff;
+  --card-foreground: #242729;
+  --primary: #f48024;
+  --primary-foreground: #ffffff;
+  --secondary: #e1ecf4;
+  --secondary-foreground: #39739d;
+  --border: #e4e6e8;
+  --muted: #f8f9f9;
+  --muted-foreground: #6a737c;
+  --radius: 0.25rem;
+
+  --forum-header-bg: #fafafb;
+  --forum-header-color: #242729;
+  --forum-panel-border: 1px solid #e4e6e8;
+  --user-block-bg: #f8f9f9;
+  --post-bg: #ffffff;
+}
+
+[data-theme="dark-hacker"] {
+  --background: #0d1117;
+  --foreground: #c9d1d9;
+  --card: #161b22;
+  --card-foreground: #c9d1d9;
+  --primary: #2ea043;
+  --primary-foreground: #ffffff;
+  --secondary: #21262d;
+  --secondary-foreground: #c9d1d9;
+  --border: #30363d;
+  --muted: #1f2428;
+  --muted-foreground: #8b949e;
+  --radius: 0.25rem;
+
+  --forum-header-bg: #161b22;
+  --forum-header-color: #58a6ff;
+  --forum-panel-border: 1px solid #30363d;
+  --user-block-bg: #0d1117;
+  --post-bg: #161b22;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+/* Forum Specific Utilities */
+.forum-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.forum-panel {
+  border: var(--forum-panel-border);
+  border-radius: var(--radius);
+  background-color: var(--card);
+  margin-bottom: 20px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.forum-header {
+  background: var(--forum-header-bg);
+  color: var(--forum-header-color);
+  padding: 10px 15px;
+  font-weight: bold;
+  border-bottom: var(--forum-panel-border);
+  font-size: 14px;
+}
+
+.forum-row {
+  display: flex;
+  border-bottom: var(--forum-panel-border);
+}
+
+.forum-row:last-child {
+  border-bottom: none;
+}
+
+.user-block {
+  width: 200px;
+  min-width: 200px;
+  background: var(--user-block-bg);
+  padding: 15px;
+  border-right: var(--forum-panel-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  font-size: 13px;
+  box-shadow: inset -1px 0px 5px rgba(0,0,0,0.05);
+}
+
+.avatar-container {
+  width: 100px;
+  height: 100px;
+  position: relative;
+  margin-bottom: 15px;
+  border: 3px solid #fff;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.online-status {
+  width: 10px;
+  height: 10px;
+  background-color: #4CAF50;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+  box-shadow: 0 0 3px rgba(0,0,0,0.2);
+}
+
+.user-bio {
+  font-size: 10px;
+  color: var(--muted-foreground);
+  margin-top: 5px;
+  font-style: italic;
+  border-top: 1px dotted var(--border);
+  padding-top: 5px;
+  width: 100%;
+}
+
+.post-content-block {
+  flex: 1;
+  background-color: var(--post-bg);
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.post-text {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.post-signature {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  font-size: 11px;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.retro-button {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 5px 15px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.retro-button:hover {
+  filter: brightness(1.1);
+}

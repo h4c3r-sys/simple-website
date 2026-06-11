@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String?
+  role      String   @default("USER") // ADMIN, USER, FAKE
+  pfpUrl    String?
+  aboutMe   String?  // Bios for fake users
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  threads   Thread[]
+  posts     Post[]
+}
+
+model Thread {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  views     Int      @default(0)
+
+  author    User     @relation(fields: [authorId], references: [id])
+  posts     Post[]
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  content   String
+  threadId  String
+  authorId  String
+  likes     Int      @default(0)
+  dislikes  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
+model Settings {
+  id        String   @id @default("global")
+  theme     String   @default("classic-blue")
+  updatedAt DateTime @updatedAt
+}
