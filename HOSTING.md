@@ -1,60 +1,160 @@
-# Hosting & Deployment Guide: The Sacred Citadel
+# Advanced Hosting & Deployment Guide: The Sacred Citadel
 
-This guide explains how to host "The Sacred Citadel" using Docker so you can access it from another PC or make it public on the internet.
+This guide details how to securely and persistently host "The Sacred Citadel" using Docker. Because the application relies on SQLite for database persistence, specific deployment strategies must be followed to ensure data integrity across container restarts.
+
+## Table of Contents
+1. [Prerequisites](#prerequisites)
+2. [Local Network Hosting (Quick Start)](#local-network-hosting)
+3. [Production VPS Hosting (Internet)](#production-vps-hosting)
+4. [Nginx Reverse Proxy & SSL Setup](#nginx-reverse-proxy--ssl-setup)
+5. [Data Persistence & Backups](#data-persistence--backups)
+6. [Troubleshooting](#troubleshooting)
+
+---
 
 ## Prerequisites
-- Docker and Docker Compose installed on your host machine.
-- An Anthropic API Key (Claude) if you want real AI generations instead of the mock testing data.
+- **Docker & Docker Compose** installed on your host machine or Virtual Private Server (VPS).
+- **Domain Name** (if hosting publicly) pointing to your server's IP address.
+- **Anthropic API Key** (Claude) for real AI generated threads.
 
-## 1. Quick Start (Local Network Hosting)
+---
 
-If you just want to run it on your current PC and access it from your phone or laptop on the **same Wi-Fi network**:
+## Local Network Hosting
 
-1. Open a terminal in this project's root folder.
-2. (Optional) Create a `.env` file and add your API key:
-   \`\`\`
+If you want to run the application on your primary PC and access it from your phone, laptop, or other devices on the same Wi-Fi network:
+
+1. **Environment Configuration:**
+   Create a `.env` file in the project root:
+   \`\`\`env
    ANTHROPIC_API_KEY=your_actual_key_here
+   # Replace with your computer's local IP address (e.g., 192.168.1.15)
    NEXTAUTH_URL=http://<YOUR_LOCAL_IP>:3000
+   NEXTAUTH_SECRET=fallback-secret-key-change-in-prod
    \`\`\`
-   *(Replace `<YOUR_LOCAL_IP>` with your PC's local IP address, e.g., 192.168.1.10)*
-3. Run the following command:
+2. **Build and Run:**
    \`\`\`bash
    docker-compose up -d --build
    \`\`\`
-4. Open a browser on another device and go to `http://<YOUR_LOCAL_IP>:3000`.
+3. **Access:**
+   Open a browser on another device connected to your network and navigate to `http://<YOUR_LOCAL_IP>:3000`.
 
-## 2. Public Hosting (Internet)
+---
 
-If you want to host this on a VPS (like DigitalOcean, AWS, or Hetzner) to access it anywhere:
+## Production VPS Hosting
 
-1. **Clone the repository** to your server.
-2. **Setup your environment variables**:
-   Create a `.env` file:
+For global access, you should deploy the application to a Linux Virtual Private Server (VPS) such as DigitalOcean, Linode, AWS EC2, or Hetzner.
+
+1. **Clone the repository** to your server:
+   \`\`\`bash
+   git clone <your_repo_url> /opt/sacred-citadel
+   cd /opt/sacred-citadel
    \`\`\`
+
+2. **Setup your environment variables:**
+   Create a `.env` file:
+   \`\`\`env
    ANTHROPIC_API_KEY=your_actual_key_here
    NEXTAUTH_URL=https://yourdomain.com
-   NEXTAUTH_SECRET=generate_a_random_secure_string_here
+   # Generate a secure secret using: openssl rand -base64 32
+   NEXTAUTH_SECRET=your_secure_random_string
+   NODE_ENV=production
    \`\`\`
-3. **Start the application**:
+
+3. **Start the application:**
    \`\`\`bash
    docker-compose up -d --build
    \`\`\`
-4. **Setup Nginx & SSL (Recommended)**:
-   Since the app runs on port 3000, you should use Nginx as a reverse proxy and attach a Let's Encrypt SSL certificate. A typical Nginx block looks like:
+
+---
+
+## Nginx Reverse Proxy & SSL Setup
+
+Because the Docker container exposes the application on port 3000 over HTTP, you need a reverse proxy to serve it over standard web ports (80/443) and secure it with SSL.
+
+1. **Install Nginx and Certbot:**
+   \`\`\`bash
+   sudo apt update
+   sudo apt install nginx certbot python3-certbot-nginx
+   \`\`\`
+
+2. **Configure Nginx:**
+   Create a new configuration file for your site:
+   \`\`\`bash
+   sudo nano /etc/nginx/sites-available/citadel
+   \`\`\`
+   Add the following configuration (replace `yourdomain.com` with your actual domain):
    \`\`\`nginx
    server {
        server_name yourdomain.com;
+
        location / {
            proxy_pass http://localhost:3000;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection 'upgrade';
            proxy_set_header Host $host;
+           proxy_cache_bypass $http_upgrade;
+
+           # Forward real IP addresses to Next.js
            proxy_set_header X-Real-IP $remote_addr;
            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
            proxy_set_header X-Forwarded-Proto $scheme;
        }
    }
    \`\`\`
-5. Use `certbot --nginx` to secure your domain.
 
-## Database Note
-This application uses a local SQLite database (`prisma/dev.db`) for zero-configuration persistence. The `docker-compose.yml` file is configured to map this file from your host machine into the container.
-- If you move servers, simply copy the `prisma/dev.db` file to retain all your threads, users, and settings.
+3. **Enable the site and restart Nginx:**
+   \`\`\`bash
+   sudo ln -s /etc/nginx/sites-available/citadel /etc/nginx/sites-enabled/
+   sudo nginx -t
+   sudo systemctl restart nginx
+   \`\`\`
+
+4. **Secure with SSL (Let's Encrypt):**
+   \`\`\`bash
+   sudo certbot --nginx -d yourdomain.com
+   \`\`\`
+   Follow the prompts to enable HTTPS. Certbot will automatically update your Nginx configuration.
+
+---
+
+## Data Persistence & Backups
+
+This application uses a local SQLite database (`prisma/dev.db`) for zero-configuration persistence.
+
+### Volumes
+The `docker-compose.yml` file is explicitly configured to mount this file from your host machine into the container:
+\`\`\`yaml
+volumes:
+  - ./prisma/dev.db:/app/prisma/dev.db
+\`\`\`
+**Crucial Note:** Because of how Docker handles file mounts, you MUST ensure that `prisma/dev.db` exists on your host machine *before* running `docker-compose up`. If the file does not exist, Docker will create a *directory* named `dev.db`, which will crash the Prisma client.
+
+If it does not exist, simply create an empty file first:
+\`\`\`bash
+touch prisma/dev.db
+docker-compose up -d --build
+\`\`\`
+
+### Backups
+To backup your entire forum database, you only need to copy a single file. You can automate this with a simple cron job:
+\`\`\`bash
+# Example backup command
+cp /opt/sacred-citadel/prisma/dev.db /opt/backups/citadel_db_$(date +%F).sqlite
+\`\`\`
+
+---
+
+## Troubleshooting
+
+### `EADDRINUSE: address already in use :::3000`
+Another service on your server is already using port 3000. Edit the `docker-compose.yml` and change the mapping to `8080:3000`. Then update your Nginx configuration to point to `http://localhost:8080`.
+
+### NextAuth Callbacks Failing (Infinite Redirects on Login)
+Ensure that `NEXTAUTH_URL` in your `.env` perfectly matches the protocol (http vs https) and domain you are using to access the site. If you are behind an Nginx SSL proxy, `NEXTAUTH_URL` must start with `https://`.
+
+### Missing Styling or 500 Errors
+If the site loads but lacks styling, ensure you built the Docker image *after* creating the `dev.db` file and running `npm ci`. Check the container logs using:
+\`\`\`bash
+docker logs sacred-citadel-app
+\`\`\`
