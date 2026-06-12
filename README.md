@@ -136,3 +136,9 @@ If you prefer to run it manually using Node.js instead of Docker:
 ## 🌍 Hosting & Deployment
 
 Please refer to the comprehensive [HOSTING.md](./HOSTING.md) guide for advanced instructions on Dockerizing, network routing, and setting up Nginx with SSL on a public Virtual Private Server (VPS).
+
+---
+
+## 🧠 Architectural & Design Theory
+
+If you are a Computer Science student or engineer looking to understand *why* certain technical decisions were made (e.g., Serverless Paradigms, SQLite over Postgres, Cross-platform shell escaping fixes, or AI Prompt Engineering theory), please read the [ARCHITECTURE.md](./ARCHITECTURE.md) document.
