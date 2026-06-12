@@ -39,23 +39,52 @@ export async function POST(req: Request) {
     let threadData;
 
     if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'dummy_key') {
-      // Mock generation for sandbox testing
+      // Advanced Mock generation for sandbox testing / dev mode
+      const mockUsernames = [
+        `xX_ShadowSniper_Xx`, `linux_guru_88`, `C0derGuy_2012`, `AnimeFreak_99`,
+        `hackerman_1337`, `WebDevPro`, `Noob_Slayer`, `JustA_Guy`, `Dark_Knight`,
+        `tech_wizard`, `forum_admin_wannabe`, `PHP_Master_Race`
+      ];
+      const mockBios = [
+        "Just a guy coding in his basement since 1999.",
+        "Arch Linux user. I use vim btw.",
+        "HTML is a programming language, fight me.",
+        "Coffee -> Code -> Sleep -> Repeat",
+        "StackOverflow copy-paste architect.",
+        "Still writing PHP 5 in 2026.",
+        "Frontend enthusiast and anime lover <3"
+      ];
+
+      const getRand = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
+
       threadData = {
         title: `Help needed with ${topic} in 2026`,
         question: `I've been trying to figure out ${topic} for the past few days, but I'm completely stuck. I tried reading the docs, but they are confusing. Does anyone have a good example or best practices for this?`,
-        author: { username: `Coder_${Math.floor(Math.random() * 1000)}` },
+        author: {
+          username: getRand(mockUsernames) + "_" + Math.floor(Math.random() * 100),
+          aboutMe: getRand(mockBios)
+        },
         replies: [
           {
-            content: `The easiest way to handle ${topic} is by using the new API methods introduced recently. Here is a quick snippet:\n\n\`\`\`javascript\nconst example = new Example();\nexample.init();\n\`\`\`\n\nHope this helps!`,
-            author: { username: `TechGuru99` }
+            content: `The easiest way to handle ${topic} is by using the new API methods introduced recently. Here is a quick snippet:\n\n\`\`\`javascript\nconst example = new Example();\nexample.init();\n\`\`\`\n\nHope this helps! (Edit: fixed a typo)`,
+            author: {
+              username: getRand(mockUsernames) + "_" + Math.floor(Math.random() * 100),
+              aboutMe: getRand(mockBios)
+            }
           },
           {
-            content: `I disagree with @TechGuru99. You shouldn't do it that way because of performance overhead. Instead, try the low-level bindings. It's harder but way more scalable for ${topic}.`,
-            author: { username: `OptimizationNerd` }
+            content: `Did you even try searching the forum first? We literally had a thread about ${topic} yesterday. \n\nSmh... anyway, I disagree with the post above. You shouldn't do it that way because of performance overhead. Instead, try the low-level bindings. It's harder but way more scalable for ${topic}.`,
+            author: {
+              username: getRand(mockUsernames) + "_" + Math.floor(Math.random() * 100),
+              aboutMe: getRand(mockBios)
+            }
           },
           {
-            content: `Thanks for the tips guys! I was having the same issue with ${topic}. +1 for the snippet.`,
-            author: { username: `NoobDev42` }
+            content: `Bump. \n\nThanks for the tips guys! I was having the same issue with ${topic}. +1 for the snippet.`,
+            author: {
+              username: getRand(mockUsernames) + "_" + Math.floor(Math.random() * 100),
+              aboutMe: getRand(mockBios)
+            }
           }
         ]
       };

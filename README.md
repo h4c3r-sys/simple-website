@@ -68,7 +68,7 @@ Welcome to **The Sacred Citadel**, a highly realistic, visually rich 2012-era pr
     NEXTAUTH_SECRET=your_super_secret_key_here
     ANTHROPIC_API_KEY=your_claude_api_key
     \`\`\`
-    *(Note: If you do not provide a valid Anthropic API key, the system will use a robust fallback mock-data generator so you can still test the UI).*
+    *(Note: If you do not provide a valid Anthropic API key, or set it to `dummy_key`, the system will automatically enter **Mock Mode**. In Mock Mode, it will generate highly randomized and realistic 2012-era usernames, bios, and threaded replies (e.g., "did you even try searching first?", "Arch Linux user btw") to allow comprehensive UI testing without hitting the Anthropic API).*
 
 3.  **Database Setup:**
     \`\`\`bash

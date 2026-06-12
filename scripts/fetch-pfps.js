@@ -10,7 +10,7 @@ if (!fs.existsSync(PFP_DIR)) {
 }
 
 const CATEGORIES = ['cars', 'football', 'anime', 'memes', 'nature', 'abstract', 'animals'];
-const IMAGES_PER_CATEGORY = 20;
+const IMAGES_PER_CATEGORY = 100;
 
 const downloadImage = (url, filepath) => {
   return new Promise((resolve, reject) => {

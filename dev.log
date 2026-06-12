@@ -2,38 +2,40 @@
 > frontend@0.1.0 dev
 > next dev
 
-⚠ Port 3000 is in use by an unknown process, using available port 3001 instead.
 ▲ Next.js 16.2.9 (Turbopack)
-- Local:         http://localhost:3001
-- Network:       http://192.168.0.2:3001
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
 - Environments: .env
-✓ Ready in 1352ms
+✓ Ready in 605ms
 
 ○ Compiling / ...
 [next-auth][warn][NEXTAUTH_URL]
 https://next-auth.js.org/warnings#nextauth_url
+prisma:query SELECT `main`.`Settings`.`id`, `main`.`Settings`.`theme`, `main`.`Settings`.`updatedAt` FROM `main`.`Settings` WHERE (`main`.`Settings`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
 prisma:query SELECT `main`.`Thread`.`id`, `main`.`Thread`.`title`, `main`.`Thread`.`content`, `main`.`Thread`.`authorId`, `main`.`Thread`.`createdAt`, `main`.`Thread`.`updatedAt`, `main`.`Thread`.`views`, COALESCE(`aggr_selection_0_Post`.`_aggr_count_posts`, 0) AS `_aggr_count_posts` FROM `main`.`Thread` LEFT JOIN (SELECT `main`.`Post`.`threadId`, COUNT(*) AS `_aggr_count_posts` FROM `main`.`Post` WHERE 1=1 GROUP BY `main`.`Post`.`threadId`) AS `aggr_selection_0_Post` ON (`main`.`Thread`.`id` = `aggr_selection_0_Post`.`threadId`) WHERE 1=1 ORDER BY `main`.`Thread`.`updatedAt` DESC LIMIT ? OFFSET ?
-prisma:query SELECT `main`.`User`.`id`, `main`.`User`.`username`, `main`.`User`.`password`, `main`.`User`.`role`, `main`.`User`.`pfpUrl`, `main`.`User`.`aboutMe`, `main`.`User`.`createdAt`, `main`.`User`.`updatedAt` FROM `main`.`User` WHERE `main`.`User`.`id` IN (?,?) LIMIT ? OFFSET ?
+prisma:query SELECT `main`.`User`.`id`, `main`.`User`.`username`, `main`.`User`.`password`, `main`.`User`.`role`, `main`.`User`.`pfpUrl`, `main`.`User`.`aboutMe`, `main`.`User`.`createdAt`, `main`.`User`.`updatedAt` FROM `main`.`User` WHERE `main`.`User`.`id` IN (?,?,?) LIMIT ? OFFSET ?
+ GET / 200 in 4.7s (next.js: 3.8s, application-code: 831ms)
 prisma:query SELECT `main`.`Settings`.`id`, `main`.`Settings`.`theme`, `main`.`Settings`.`updatedAt` FROM `main`.`Settings` WHERE (`main`.`Settings`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
- GET / 200 in 7.7s (next.js: 6.8s, application-code: 930ms)
-prisma:query SELECT `main`.`Settings`.`id`, `main`.`Settings`.`theme`, `main`.`Settings`.`updatedAt` FROM `main`.`Settings` WHERE (`main`.`Settings`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
- GET /new-thread 200 in 1086ms (next.js: 891ms, application-code: 195ms)
+ GET /new-thread 200 in 886ms (next.js: 779ms, application-code: 107ms)
 prisma:query SELECT `main`.`User`.`id`, `main`.`User`.`username`, `main`.`User`.`password`, `main`.`User`.`role`, `main`.`User`.`pfpUrl`, `main`.`User`.`aboutMe`, `main`.`User`.`createdAt`, `main`.`User`.`updatedAt` FROM `main`.`User` WHERE (`main`.`User`.`username` = ? AND 1=1) LIMIT ? OFFSET ?
 prisma:query INSERT INTO `main`.`User` (`id`, `username`, `role`, `pfpUrl`, `aboutMe`, `createdAt`, `updatedAt`) VALUES (?,?,?,?,?,?,?) RETURNING `id` AS `id`, `username` AS `username`, `password` AS `password`, `role` AS `role`, `pfpUrl` AS `pfpUrl`, `aboutMe` AS `aboutMe`, `createdAt` AS `createdAt`, `updatedAt` AS `updatedAt`
 prisma:query INSERT INTO `main`.`Thread` (`id`, `title`, `content`, `authorId`, `createdAt`, `updatedAt`, `views`) VALUES (?,?,?,?,?,?,?) RETURNING `id` AS `id`, `title` AS `title`, `content` AS `content`, `authorId` AS `authorId`, `createdAt` AS `createdAt`, `updatedAt` AS `updatedAt`, `views` AS `views`
 prisma:query INSERT INTO `main`.`Post` (`id`, `content`, `threadId`, `authorId`, `likes`, `dislikes`, `createdAt`, `updatedAt`) VALUES (?,?,?,?,?,?,?,?) RETURNING `id` AS `id`, `content` AS `content`, `threadId` AS `threadId`, `authorId` AS `authorId`, `likes` AS `likes`, `dislikes` AS `dislikes`, `createdAt` AS `createdAt`, `updatedAt` AS `updatedAt`
 prisma:query SELECT `main`.`User`.`id`, `main`.`User`.`username`, `main`.`User`.`password`, `main`.`User`.`role`, `main`.`User`.`pfpUrl`, `main`.`User`.`aboutMe`, `main`.`User`.`createdAt`, `main`.`User`.`updatedAt` FROM `main`.`User` WHERE (`main`.`User`.`username` = ? AND 1=1) LIMIT ? OFFSET ?
+prisma:query INSERT INTO `main`.`User` (`id`, `username`, `role`, `pfpUrl`, `aboutMe`, `createdAt`, `updatedAt`) VALUES (?,?,?,?,?,?,?) RETURNING `id` AS `id`, `username` AS `username`, `password` AS `password`, `role` AS `role`, `pfpUrl` AS `pfpUrl`, `aboutMe` AS `aboutMe`, `createdAt` AS `createdAt`, `updatedAt` AS `updatedAt`
 prisma:query INSERT INTO `main`.`Post` (`id`, `content`, `threadId`, `authorId`, `likes`, `dislikes`, `createdAt`, `updatedAt`) VALUES (?,?,?,?,?,?,?,?) RETURNING `id` AS `id`, `content` AS `content`, `threadId` AS `threadId`, `authorId` AS `authorId`, `likes` AS `likes`, `dislikes` AS `dislikes`, `createdAt` AS `createdAt`, `updatedAt` AS `updatedAt`
 prisma:query SELECT `main`.`User`.`id`, `main`.`User`.`username`, `main`.`User`.`password`, `main`.`User`.`role`, `main`.`User`.`pfpUrl`, `main`.`User`.`aboutMe`, `main`.`User`.`createdAt`, `main`.`User`.`updatedAt` FROM `main`.`User` WHERE (`main`.`User`.`username` = ? AND 1=1) LIMIT ? OFFSET ?
+prisma:query INSERT INTO `main`.`User` (`id`, `username`, `role`, `pfpUrl`, `aboutMe`, `createdAt`, `updatedAt`) VALUES (?,?,?,?,?,?,?) RETURNING `id` AS `id`, `username` AS `username`, `password` AS `password`, `role` AS `role`, `pfpUrl` AS `pfpUrl`, `aboutMe` AS `aboutMe`, `createdAt` AS `createdAt`, `updatedAt` AS `updatedAt`
 prisma:query INSERT INTO `main`.`Post` (`id`, `content`, `threadId`, `authorId`, `likes`, `dislikes`, `createdAt`, `updatedAt`) VALUES (?,?,?,?,?,?,?,?) RETURNING `id` AS `id`, `content` AS `content`, `threadId` AS `threadId`, `authorId` AS `authorId`, `likes` AS `likes`, `dislikes` AS `dislikes`, `createdAt` AS `createdAt`, `updatedAt` AS `updatedAt`
 prisma:query SELECT `main`.`User`.`id`, `main`.`User`.`username`, `main`.`User`.`password`, `main`.`User`.`role`, `main`.`User`.`pfpUrl`, `main`.`User`.`aboutMe`, `main`.`User`.`createdAt`, `main`.`User`.`updatedAt` FROM `main`.`User` WHERE (`main`.`User`.`username` = ? AND 1=1) LIMIT ? OFFSET ?
+prisma:query INSERT INTO `main`.`User` (`id`, `username`, `role`, `pfpUrl`, `aboutMe`, `createdAt`, `updatedAt`) VALUES (?,?,?,?,?,?,?) RETURNING `id` AS `id`, `username` AS `username`, `password` AS `password`, `role` AS `role`, `pfpUrl` AS `pfpUrl`, `aboutMe` AS `aboutMe`, `createdAt` AS `createdAt`, `updatedAt` AS `updatedAt`
 prisma:query INSERT INTO `main`.`Post` (`id`, `content`, `threadId`, `authorId`, `likes`, `dislikes`, `createdAt`, `updatedAt`) VALUES (?,?,?,?,?,?,?,?) RETURNING `id` AS `id`, `content` AS `content`, `threadId` AS `threadId`, `authorId` AS `authorId`, `likes` AS `likes`, `dislikes` AS `dislikes`, `createdAt` AS `createdAt`, `updatedAt` AS `updatedAt`
- POST /api/generate-thread 200 in 1410ms (next.js: 1271ms, application-code: 139ms)
+ POST /api/generate-thread 200 in 1280ms (next.js: 1167ms, application-code: 113ms)
 prisma:query SELECT `main`.`Thread`.`id`, `main`.`Thread`.`title`, `main`.`Thread`.`content`, `main`.`Thread`.`authorId`, `main`.`Thread`.`createdAt`, `main`.`Thread`.`updatedAt`, `main`.`Thread`.`views` FROM `main`.`Thread` WHERE (`main`.`Thread`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
 prisma:query SELECT `main`.`Post`.`id`, `main`.`Post`.`content`, `main`.`Post`.`threadId`, `main`.`Post`.`authorId`, `main`.`Post`.`likes`, `main`.`Post`.`dislikes`, `main`.`Post`.`createdAt`, `main`.`Post`.`updatedAt` FROM `main`.`Post` WHERE `main`.`Post`.`threadId` IN (?) ORDER BY `main`.`Post`.`createdAt` ASC LIMIT ? OFFSET ?
 prisma:query SELECT `main`.`User`.`id`, `main`.`User`.`username`, `main`.`User`.`password`, `main`.`User`.`role`, `main`.`User`.`pfpUrl`, `main`.`User`.`aboutMe`, `main`.`User`.`createdAt`, `main`.`User`.`updatedAt` FROM `main`.`User` WHERE `main`.`User`.`id` IN (?,?,?,?) LIMIT ? OFFSET ?
- GET /thread/cmq9nbakq000211w4n5pkq530 200 in 2.9s (next.js: 2.8s, application-code: 83ms)
-[browser] Image with src "http://localhost:3001/pfps/pfp_55.jpg" has "fill" and parent element with invalid "position". Provided "static" should be one of absolute,fixed,relative.
-[browser] Image with src "http://localhost:3001/pfps/pfp_67.jpg" has "fill" and parent element with invalid "position". Provided "static" should be one of absolute,fixed,relative.
-[browser] Image with src "http://localhost:3001/pfps/pfp_16.jpg" has "fill" and parent element with invalid "position". Provided "static" should be one of absolute,fixed,relative.
-[browser] Image with src "http://localhost:3001/pfps/pfp_50.jpg" has "fill" and parent element with invalid "position". Provided "static" should be one of absolute,fixed,relative.
+ GET /thread/cmqaq4a6t00027ntu04aqi1pk 200 in 2.4s (next.js: 2.3s, application-code: 85ms)
+[browser] Image with src "http://localhost:3000/pfps/pfp_441.jpg" has "fill" and parent element with invalid "position". Provided "static" should be one of absolute,fixed,relative.
+[browser] Image with src "http://localhost:3000/pfps/pfp_559.jpg" has "fill" and parent element with invalid "position". Provided "static" should be one of absolute,fixed,relative.
+[browser] Image with src "http://localhost:3000/pfps/pfp_348.jpg" has "fill" and parent element with invalid "position". Provided "static" should be one of absolute,fixed,relative.
+[browser] Image with src "http://localhost:3000/pfps/pfp_477.jpg" has "fill" and parent element with invalid "position". Provided "static" should be one of absolute,fixed,relative.
