@@ -145,6 +145,40 @@ cp /opt/sacred-citadel/prisma/dev.db /opt/backups/citadel_db_$(date +%F).sqlite
 
 ---
 
+## Performance & Optimization for VPS Hosting
+
+If you are hosting this on a low-end/budget VPS ($5-$10/month) and want to maximize performance so you can access it blazingly fast from any device:
+
+1. **Docker Resource Limits:**
+   Prevent the application from eating all your VPS RAM by setting memory limits in your `docker-compose.yml`:
+   ```yaml
+   deploy:
+     resources:
+       limits:
+         memory: 512M
+   ```
+
+2. **Next.js Image Optimization:**
+   The `next/image` component dynamically optimizes the 700+ scraped PFPs. This can be CPU intensive on first load. You can add sharp to the Dockerfile to speed this up:
+   ```dockerfile
+   RUN npm install sharp
+   ```
+
+3. **Nginx Caching (Static Assets):**
+   Update your Nginx config to heavily cache the CSS, JS, and image assets so they don't hit the Next.js server on every request:
+   ```nginx
+   location ~* \.(?:ico|css|js|gif|jpe?g|png)$ {
+       proxy_pass http://localhost:3000;
+       expires 30d;
+       add_header Cache-Control "public, no-transform";
+   }
+   ```
+
+4. **Prisma Connection Pooling:**
+   Since SQLite is local, connection pooling isn't as critical as Postgres, but ensure `PRISMA_CLI_QUERY_ENGINE_TYPE=library` is used to prevent excess engine binary spawning on low-memory boxes.
+
+---
+
 ## Troubleshooting
 
 ### `EADDRINUSE: address already in use :::3000`
