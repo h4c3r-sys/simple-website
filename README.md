@@ -54,7 +54,33 @@ Welcome to **The Sacred Citadel**, a highly realistic, visually rich 2012-era pr
 
 ---
 
-## 🚀 Local Development Setup
+## 🚀 How to Run with Docker (Recommended)
+
+If you want to quickly run the app on your computer using Docker (with Mock Mode enabled if you don't have an API key):
+
+```bash
+# Simply run this command in the project root:
+docker-compose up -d --build
+```
+Navigate to `http://localhost:3000` in your browser.
+
+---
+
+## 🚀 How to put it Online / Web Hosting
+
+If you want to host this application online so you can access it from your phone, from work, or share it with the world, **you must read the [HOSTING.md](./HOSTING.md) file.**
+
+The `HOSTING.md` file contains the complete step-by-step guide on how to:
+1. Deploy it to an online VPS (like DigitalOcean, AWS, etc).
+2. Configure Docker on the server.
+3. Setup Nginx and SSL (HTTPS) to securely put it online.
+4. Optimize it for cheap/low-end servers.
+
+---
+
+## 💻 Local Development Setup (Manual)
+
+If you prefer to run it manually using Node.js instead of Docker:
 
 1.  **Install Dependencies:**
     \`\`\`bash
