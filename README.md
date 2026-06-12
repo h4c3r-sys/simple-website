@@ -56,12 +56,19 @@ Welcome to **The Sacred Citadel**, a highly realistic, visually rich 2012-era pr
 
 ## 🚀 How to Run with Docker (Recommended)
 
-If you want to quickly run the app on your computer using Docker (with Mock Mode enabled if you don't have an API key):
+If you want to quickly run the app on your computer using Docker without needing to install Node.js, databases, or manually set up Prisma:
 
+**Option A: Local Development Mode (Live-Reload, Auto-Setup DB, Mock Mode)**
+This command automatically installs dependencies, creates the SQLite database, seeds the admin user, and runs the live-reload dev server. If you don't have an API key, it automatically enters **Mock Mode**!
 ```bash
-# Simply run this command in the project root:
+docker-compose -f docker-compose.dev.yml up
+```
+
+**Option B: Production Production Build**
+```bash
 docker-compose up -d --build
 ```
+
 Navigate to `http://localhost:3000` in your browser.
 
 ---
