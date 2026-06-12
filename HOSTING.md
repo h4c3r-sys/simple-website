@@ -53,7 +53,8 @@ For global access, you should deploy the application to a Linux Virtual Private 
 2. **Setup your environment variables:**
    Create a `.env` file:
    \`\`\`env
-   ANTHROPIC_API_KEY=your_actual_key_here
+   # You can provide a single key, or multiple comma-separated keys to avoid rate limits
+   ANTHROPIC_API_KEY=sk-ant-api03-xxx,sk-ant-api03-yyy
    NEXTAUTH_URL=https://yourdomain.com
    # Generate a secure secret using: openssl rand -base64 32
    NEXTAUTH_SECRET=your_secure_random_string

@@ -4,10 +4,19 @@ import Anthropic from '@anthropic-ai/sdk';
 import fs from 'fs';
 import path from 'path';
 
-// Note: Ensure ANTHROPIC_API_KEY is available in the environment variables
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || 'dummy_key',
-});
+// Helper to parse multiple API keys and pick one randomly
+function getAnthropicClient() {
+  const rawKey = process.env.ANTHROPIC_API_KEY;
+  if (!rawKey || rawKey === 'dummy_key') {
+    return new Anthropic({ apiKey: 'dummy_key' });
+  }
+
+  // Support comma-separated keys for load-balancing / rate-limit avoidance
+  const keys = rawKey.split(',').map(k => k.trim()).filter(k => k.length > 0);
+  const selectedKey = keys[Math.floor(Math.random() * keys.length)];
+
+  return new Anthropic({ apiKey: selectedKey });
+}
 
 // Helper to pick random PFP
 function getRandomPfp() {
@@ -115,6 +124,7 @@ export async function POST(req: Request) {
       }
       `;
 
+      const anthropic = getAnthropicClient();
       const msg = await anthropic.messages.create({
         model: "claude-3-5-sonnet-20241022",
         max_tokens: 1500,

@@ -99,7 +99,8 @@ If you prefer to run it manually using Node.js instead of Docker:
     \`\`\`env
     NEXTAUTH_URL=http://localhost:3000
     NEXTAUTH_SECRET=your_super_secret_key_here
-    ANTHROPIC_API_KEY=your_claude_api_key
+    # You can provide a single key, or multiple comma-separated keys to avoid rate limits
+    ANTHROPIC_API_KEY=sk-ant-api03-xxx,sk-ant-api03-yyy
     \`\`\`
     *(Note: If you do not provide a valid Anthropic API key, or set it to `dummy_key`, the system will automatically enter **Mock Mode**. In Mock Mode, it will generate highly randomized and realistic 2012-era usernames, bios, and threaded replies (e.g., "did you even try searching first?", "Arch Linux user btw") to allow comprehensive UI testing without hitting the Anthropic API).*
 
