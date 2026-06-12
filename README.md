@@ -112,7 +112,7 @@ If you prefer to run it manually using Node.js instead of Docker:
     npx prisma migrate dev
 
     # Seed the database (Creates the default Admin user)
-    npx ts-node --compilerOptions '{"module":"CommonJS"}' prisma/seed.ts
+    npx prisma db seed
     \`\`\`
     *(Default Admin Credentials -> Username: admin, Password: admin)*
 

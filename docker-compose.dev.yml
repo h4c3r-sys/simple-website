@@ -20,5 +20,5 @@ services:
       sh -c "npm install &&
              npx prisma generate &&
              npx prisma db push &&
-             npx ts-node --compilerOptions '{\"module\":\"CommonJS\"}' prisma/seed.ts || true &&
+             npx prisma db seed || true &&
              npm run dev"
