@@ -71,9 +71,15 @@ async function main() {
       const filename = `pfp_${category}_${i}.jpg`;
       const filepath = path.join(PFP_DIR, filename);
 
-      // LoremFlickr supports exact keywords for images (e.g. /anime, /cars)
-      // The `?lock=` query forces it to give a unique image for each index instead of a cached one.
-      const url = `https://loremflickr.com/150/150/${category}?lock=${i}`;
+      let url;
+      if (process.env.UNSPLASH_ACCESS_KEY) {
+        // Use Optional Premium Unsplash API for higher quality avatars
+        url = `https://api.unsplash.com/photos/random?query=${category}&client_id=${process.env.UNSPLASH_ACCESS_KEY}&w=150&h=150`;
+      } else {
+        // Fallback: LoremFlickr supports exact keywords for images (e.g. /anime, /cars)
+        // The `?lock=` query forces it to give a unique image for each index instead of a cached one.
+        url = `https://loremflickr.com/150/150/${category}?lock=${i}`;
+      }
 
       try {
         await downloadImage(url, filepath);

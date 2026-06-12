@@ -59,6 +59,8 @@ For global access, you should deploy the application to a Linux Virtual Private 
    # Generate a secure secret using: openssl rand -base64 32
    NEXTAUTH_SECRET=your_secure_random_string
    NODE_ENV=production
+   # Optional: Premium API for fetching higher-quality PFPs instead of the free LoremFlickr fallback
+   # UNSPLASH_ACCESS_KEY=your_unsplash_key
    \`\`\`
 
 3. **Start the application:**

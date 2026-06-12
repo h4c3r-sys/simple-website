@@ -101,6 +101,9 @@ If you prefer to run it manually using Node.js instead of Docker:
     NEXTAUTH_SECRET=your_super_secret_key_here
     # You can provide a single key, or multiple comma-separated keys to avoid rate limits
     ANTHROPIC_API_KEY=sk-ant-api03-xxx,sk-ant-api03-yyy
+
+    # Optional: Premium API for fetching higher-quality PFPs instead of the free LoremFlickr fallback
+    # UNSPLASH_ACCESS_KEY=your_unsplash_key
     \`\`\`
     *(Note: If you do not provide a valid Anthropic API key, or set it to `dummy_key`, the system will automatically enter **Mock Mode**. In Mock Mode, it will generate highly randomized and realistic 2012-era usernames, bios, and threaded replies (e.g., "did you even try searching first?", "Arch Linux user btw") to allow comprehensive UI testing without hitting the Anthropic API).*
 
