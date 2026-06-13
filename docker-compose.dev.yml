@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  citadel-dev:
+    image: node:18-alpine
+    container_name: sacred-citadel-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - NODE_ENV=development
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=fallback-secret-key-change-in-prod
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-dummy_key}
+    # This command installs dependencies, runs Prisma setup to create the DB,
+    # seeds the admin user, and then starts the Next.js dev server.
+    command: >
+      sh -c "npm install &&
+             npx prisma generate &&
+             npx prisma db push &&
+             npx prisma db seed || true &&
+             npm run dev"

@@ -1,0 +1,11 @@
+▲ Next.js 16.2.9
+- Local:         http://localhost:3000
+- Network:       http://0.0.0.0:3000
+✓ Ready in 0ms
+[next-auth][warn][NEXTAUTH_URL]
+https://next-auth.js.org/warnings#nextauth_url
+prisma:query SELECT `main`.`Settings`.`id`, `main`.`Settings`.`theme`, `main`.`Settings`.`updatedAt` FROM `main`.`Settings` WHERE (`main`.`Settings`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
+prisma:query SELECT `main`.`Thread`.`id`, `main`.`Thread`.`title`, `main`.`Thread`.`content`, `main`.`Thread`.`authorId`, `main`.`Thread`.`createdAt`, `main`.`Thread`.`updatedAt`, `main`.`Thread`.`views`, COALESCE(`aggr_selection_0_Post`.`_aggr_count_posts`, 0) AS `_aggr_count_posts` FROM `main`.`Thread` LEFT JOIN (SELECT `main`.`Post`.`threadId`, COUNT(*) AS `_aggr_count_posts` FROM `main`.`Post` WHERE 1=1 GROUP BY `main`.`Post`.`threadId`) AS `aggr_selection_0_Post` ON (`main`.`Thread`.`id` = `aggr_selection_0_Post`.`threadId`) WHERE 1=1 ORDER BY `main`.`Thread`.`updatedAt` DESC LIMIT ? OFFSET ?
+prisma:query SELECT `main`.`User`.`id`, `main`.`User`.`username`, `main`.`User`.`password`, `main`.`User`.`role`, `main`.`User`.`pfpUrl`, `main`.`User`.`aboutMe`, `main`.`User`.`createdAt`, `main`.`User`.`updatedAt` FROM `main`.`User` WHERE `main`.`User`.`id` IN (?,?,?) LIMIT ? OFFSET ?
+prisma:query SELECT `main`.`Settings`.`id`, `main`.`Settings`.`theme`, `main`.`Settings`.`updatedAt` FROM `main`.`Settings` WHERE (`main`.`Settings`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
+prisma:query SELECT `main`.`Settings`.`id`, `main`.`Settings`.`theme`, `main`.`Settings`.`updatedAt` FROM `main`.`Settings` WHERE (`main`.`Settings`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
