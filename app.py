@@ -20,7 +20,8 @@ TRANSLATIONS = {
         'export_graphml_btn': 'Export GraphML',
         'export_json_btn': 'Export JSON',
         'error_msg': 'Error generating graph: ',
-        'success_msg': 'Graph generated successfully!'
+        'success_msg': 'Graph generated successfully!',
+        'symbols_help': 'Supported symbols: + (OR), * or & (AND), ! or ~ (NOT), ^ (XOR / Symmetric Difference)'
     },
     'es': {
         'title': 'Editor y Generador de Gadgets de Grafos',
@@ -30,7 +31,8 @@ TRANSLATIONS = {
         'export_graphml_btn': 'Exportar GraphML',
         'export_json_btn': 'Exportar JSON',
         'error_msg': 'Error al generar el grafo: ',
-        'success_msg': '¡Grafo generado con éxito!'
+        'success_msg': '¡Grafo generado con éxito!',
+        'symbols_help': 'Símbolos compatibles: + (OR), * o & (AND), ! o ~ (NOT), ^ (XOR / Diferencia Simétrica)'
     },
     'fr': {
         'title': 'Éditeur et Générateur de Gadgets de Graphe',
@@ -40,7 +42,8 @@ TRANSLATIONS = {
         'export_graphml_btn': 'Exporter GraphML',
         'export_json_btn': 'Exporter JSON',
         'error_msg': 'Erreur lors de la génération du graphe : ',
-        'success_msg': 'Graphe généré avec succès !'
+        'success_msg': 'Graphe généré avec succès !',
+        'symbols_help': 'Symboles pris en charge : + (OU), * ou & (ET), ! ou ~ (NON), ^ (XOR / Différence Symétrique)'
     },
     'pl': {
         'title': 'Edytor i Generator Gadżetów Grafowych',
@@ -50,7 +53,8 @@ TRANSLATIONS = {
         'export_graphml_btn': 'Eksportuj GraphML',
         'export_json_btn': 'Eksportuj JSON',
         'error_msg': 'Błąd podczas generowania grafu: ',
-        'success_msg': 'Graf wygenerowany pomyślnie!'
+        'success_msg': 'Graf wygenerowany pomyślnie!',
+        'symbols_help': 'Obsługiwane symbole: + (OR), * lub & (AND), ! lub ~ (NOT), ^ (XOR / Różnica symetryczna)'
     }
 }
 
@@ -83,6 +87,12 @@ app.layout = html.Div([
                   style={'width': '400px', 'marginLeft': '10px'}),
         html.Button(id='generate-btn', children=TRANSLATIONS['en']['generate_btn'],
                     n_clicks=0, style={'marginLeft': '10px'}),
+
+        html.Div(
+            id='symbols-help',
+            children=TRANSLATIONS['pl']['symbols_help'],
+            style={'marginTop': '5px', 'fontSize': '12px', 'color': '#555'}
+        ),
 
         html.Div(id='message-div', style={'marginTop': '10px', 'color': 'red'}),
 
@@ -161,7 +171,8 @@ app.layout = html.Div([
      Output('generate-btn', 'children'),
      Output('export-png-btn', 'children'),
      Output('export-graphml-btn', 'children'),
-     Output('export-json-btn', 'children')],
+     Output('export-json-btn', 'children'),
+     Output('symbols-help', 'children')],
     [Input('lang-dropdown', 'value')]
 )
 def update_language(lang):
@@ -172,7 +183,8 @@ def update_language(lang):
         t['generate_btn'],
         t['export_png_btn'],
         t['export_graphml_btn'],
-        t['export_json_btn']
+        t['export_json_btn'],
+        t['symbols_help']
     )
 
 
