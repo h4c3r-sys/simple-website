@@ -41,6 +41,16 @@ TRANSLATIONS = {
         'export_json_btn': 'Exporter JSON',
         'error_msg': 'Erreur lors de la génération du graphe : ',
         'success_msg': 'Graphe généré avec succès !'
+    },
+    'pl': {
+        'title': 'Edytor i Generator Gadżetów Grafowych',
+        'input_label': 'Formuła logiczna (np. (A + B) ^ C):',
+        'generate_btn': 'Generuj Graf',
+        'export_png_btn': 'Eksportuj PNG',
+        'export_graphml_btn': 'Eksportuj GraphML',
+        'export_json_btn': 'Eksportuj JSON',
+        'error_msg': 'Błąd podczas generowania grafu: ',
+        'success_msg': 'Graf wygenerowany pomyślnie!'
     }
 }
 
@@ -59,9 +69,10 @@ app.layout = html.Div([
                 options=[
                     {'label': 'English', 'value': 'en'},
                     {'label': 'Español', 'value': 'es'},
-                    {'label': 'Français', 'value': 'fr'}
+                    {'label': 'Français', 'value': 'fr'},
+                    {'label': 'Polski', 'value': 'pl'}
                 ],
-                value='en',
+                value='pl',
                 clearable=False,
                 style={'width': '150px', 'display': 'inline-block', 'marginLeft': '10px'}
             )
